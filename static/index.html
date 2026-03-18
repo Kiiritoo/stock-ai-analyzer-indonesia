@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IDX Stock Analyzer · AI-Powered</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0b0f17;
+      --surface:  #131820;
+      --surface2: #1a2030;
+      --border:   #252d3d;
+      --text:     #e2e8f0;
+      --muted:    #7a8ba0;
+      --accent:   #4f9eff;
+      --green:    #34d399;
+      --red:      #f87171;
+      --yellow:   #fbbf24;
+      --purple:   #a78bfa;
+      --orange:   #fb923c;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 2rem 1rem 4rem;
+    }
+
+    /* ── Header ── */
+    header { text-align: center; margin-bottom: 2.5rem; }
+    header h1 { font-size: 1.8rem; font-weight: 800; letter-spacing: -0.5px; }
+    header h1 span { color: var(--accent); }
+    header p { margin-top: 0.4rem; color: var(--muted); font-size: 0.85rem; }
+
+    /* ── Search ── */
+    .search-wrap { max-width: 520px; margin: 0 auto 1.25rem; display: flex; gap: 0.5rem; }
+    #stockInput {
+      flex: 1; padding: 0.75rem 1rem; font-size: 1rem; font-family: inherit;
+      background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+      color: var(--text); outline: none; text-transform: uppercase; letter-spacing: 1px;
+      transition: border-color .2s;
+    }
+    #stockInput:focus { border-color: var(--accent); }
+    #stockInput::placeholder { text-transform: none; letter-spacing: 0; color: var(--muted); }
+    #analyzeBtn {
+      padding: 0.75rem 1.4rem; font-size: 0.95rem; font-family: inherit; font-weight: 700;
+      background: var(--accent); color: #0b0f17; border: none; border-radius: 10px;
+      cursor: pointer; transition: opacity .2s; white-space: nowrap;
+    }
+    #analyzeBtn:disabled { opacity: 0.45; cursor: not-allowed; }
+    #analyzeBtn:hover:not(:disabled) { opacity: 0.85; }
+
+    /* Quick picks */
+    .quick-picks { text-align: center; margin-bottom: 2.5rem; font-size: 0.8rem; color: var(--muted); }
+    .quick-picks span { margin-right: 0.4rem; }
+    .chip {
+      display: inline-block; background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 20px; padding: 3px 12px; margin: 2px; cursor: pointer;
+      font-size: 0.78rem; font-weight: 600; transition: border-color .15s, color .15s;
+    }
+    .chip:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* ── Loading ── */
+    #loading { display: none; text-align: center; padding: 3rem 1rem; color: var(--muted); }
+    .spinner {
+      width: 38px; height: 38px; border: 3px solid var(--border);
+      border-top-color: var(--accent); border-radius: 50%;
+      animation: spin .8s linear infinite; margin: 0 auto 1rem;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #loadingStep { font-size: 0.82rem; margin-top: 0.4rem; color: var(--muted); }
+
+    /* ── Error ── */
+    #error {
+      display: none; max-width: 640px; margin: 1rem auto;
+      background: rgba(248,113,113,.08); border: 1px solid var(--red);
+      border-radius: 10px; padding: 1rem 1.25rem; color: var(--red); font-size: 0.88rem;
+    }
+
+    /* ── Results container ── */
+    #results { display: none; max-width: 900px; margin: 0 auto; }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px; padding: 1.25rem 1.4rem;
+    }
+    .card-label {
+      font-size: 0.68rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 1px; color: var(--muted); margin-bottom: 0.65rem;
+    }
+
+    /* ── Stock header ── */
+    .stock-header {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+      padding: 1.25rem 1.5rem; margin-bottom: 1rem;
+      display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: .75rem;
+    }
+    .stock-header .code { font-size: 1.6rem; font-weight: 800; color: var(--accent); }
+    .stock-header .name { color: var(--muted); font-size: 0.85rem; margin-top: 2px; }
+    .stock-header .meta { font-size: 0.75rem; color: var(--muted); text-align: right; line-height: 1.6; }
+
+    /* ── Price strip ── */
+    .price-strip {
+      display: grid; grid-template-columns: 2fr 1fr 1fr 1fr;
+      gap: 0.75rem; margin-bottom: 1rem;
+    }
+    @media (max-width: 600px) { .price-strip { grid-template-columns: 1fr 1fr; } }
+    .price-cell {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+      padding: 1rem 1.1rem;
+    }
+    .price-cell.current { border-color: var(--accent); }
+    .price-cell .pc-label { font-size: 0.67rem; text-transform: uppercase; letter-spacing: .8px; color: var(--muted); margin-bottom: 4px; }
+    .price-cell .pc-value { font-size: 1.25rem; font-weight: 700; }
+    .price-cell.current .pc-value { color: var(--accent); font-size: 1.5rem; }
+    .price-cell .pc-sub { font-size: 0.75rem; margin-top: 2px; color: var(--muted); }
+    .price-cell .pc-change { font-size: 0.82rem; font-weight: 600; margin-top: 4px; }
+
+    /* ── Investment Timing (hero card) ── */
+    .timing-card {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 14px; padding: 1.4rem 1.5rem;
+      margin-bottom: 1rem; display: flex; gap: 1.5rem; align-items: center; flex-wrap: wrap;
+    }
+    .timing-score-wrap { flex-shrink: 0; }
+    .timing-score-ring {
+      width: 90px; height: 90px; border-radius: 50%; position: relative;
+      display: flex; align-items: center; justify-content: center;
+      background: conic-gradient(var(--score-color, var(--accent)) var(--score-deg, 0deg), var(--border) 0deg);
+    }
+    .timing-score-inner {
+      width: 68px; height: 68px; border-radius: 50%;
+      background: var(--surface2);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+    }
+    .timing-score-num { font-size: 1.3rem; font-weight: 800; line-height: 1; }
+    .timing-score-max { font-size: 0.6rem; color: var(--muted); }
+    .timing-body { flex: 1; min-width: 200px; }
+    .timing-label-badge {
+      display: inline-block; padding: 4px 14px; border-radius: 20px;
+      font-size: 0.82rem; font-weight: 700; margin-bottom: 0.5rem;
+    }
+    .timing-reasoning { font-size: 0.82rem; color: var(--muted); line-height: 1.6; }
+    .timing-title { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 0.5rem; }
+
+    /* ── 2-col grid ── */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
+    @media (max-width: 600px) { .grid-2 { grid-template-columns: 1fr; } }
+
+    /* ── Sentiment card ── */
+    .sentiment-overall { font-size: 1.05rem; font-weight: 700; margin-bottom: 0.7rem; }
+    .bar-row { margin-bottom: 0.4rem; }
+    .bar-label { font-size: 0.75rem; color: var(--muted); display: flex; justify-content: space-between; margin-bottom: 3px; }
+    .bar-track { background: var(--bg); border-radius: 4px; height: 6px; overflow: hidden; }
+    .bar-fill { height: 100%; border-radius: 4px; transition: width .7s ease; }
+    .bar-fill.pos { background: var(--green); }
+    .bar-fill.neg { background: var(--red); }
+    .bar-fill.neu { background: var(--yellow); }
+    .article-count-note { font-size: 0.72rem; color: var(--muted); margin-top: 0.6rem; }
+
+    /* ── Price Trend card ── */
+    .trend-direction { font-size: 1.3rem; font-weight: 800; margin-bottom: 0.2rem; }
+    .trend-momentum { font-size: 0.78rem; margin-bottom: 0.65rem; }
+    .trend-assessment { font-size: 0.8rem; color: var(--muted); line-height: 1.55; }
+
+    /* ── Outlook cards ── */
+    .outlook-icon { font-size: 1.5rem; margin-bottom: 0.35rem; }
+    .outlook-label { font-size: 1rem; font-weight: 700; margin-bottom: 0.2rem; }
+    .outlook-timeframe { font-size: 0.72rem; color: var(--muted); margin-bottom: 0.5rem; }
+    .outlook-reasoning { font-size: 0.79rem; color: var(--muted); line-height: 1.55; }
+    .outlook-entry-note {
+      margin-top: 0.65rem; padding: 0.45rem 0.7rem;
+      background: var(--bg); border-left: 2px solid var(--accent);
+      border-radius: 0 6px 6px 0; font-size: 0.75rem; color: var(--accent);
+    }
+    .conf-label { font-size: 0.67rem; text-transform: uppercase; color: var(--muted); margin: 0.65rem 0 3px; }
+    .conf-track { background: var(--bg); border-radius: 4px; height: 5px; }
+    .conf-fill { height: 100%; border-radius: 4px; background: var(--accent); transition: width .7s ease; }
+
+    /* ── Rec card ── */
+    .rec-badge {
+      display: inline-block; padding: 0.4rem 1.3rem;
+      border-radius: 10px; font-size: 1.3rem; font-weight: 800; margin-bottom: 0.7rem;
+    }
+    .rec-BELI  { background: rgba(52,211,153,.12); color: var(--green);  border: 1px solid var(--green); }
+    .rec-TAHAN { background: rgba(251,191,36,.10); color: var(--yellow); border: 1px solid var(--yellow); }
+    .rec-JUAL  { background: rgba(248,113,113,.12); color: var(--red);   border: 1px solid var(--red); }
+    .rec-summary { font-size: 0.82rem; color: var(--muted); line-height: 1.6; }
+
+    /* ── Factor / Risk list ── */
+    .factor-list { list-style: none; }
+    .factor-list li {
+      font-size: 0.8rem; padding: 0.35rem 0; border-bottom: 1px solid var(--border);
+      display: flex; align-items: flex-start; gap: 0.5rem; color: var(--muted); line-height: 1.5;
+    }
+    .factor-list li:last-child { border-bottom: none; }
+    .factor-list li::before { content: "•"; color: var(--accent); flex-shrink: 0; }
+    .risk-list li::before { color: var(--red); }
+
+    /* ── Section title ── */
+    .section-title {
+      font-size: 0.72rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .8px; color: var(--muted); margin: 1.25rem 0 0.65rem;
+    }
+
+    /* ── Warning badge ── */
+    .no-news-badge {
+      background: rgba(251,191,36,.08); border: 1px solid var(--yellow);
+      border-radius: 10px; padding: 0.6rem 1rem; font-size: 0.8rem; color: var(--yellow);
+      margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;
+    }
+
+    /* ── News list ── */
+    .news-list { display: flex; flex-direction: column; gap: 0.55rem; }
+    .news-item {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; padding: 0.9rem 1.1rem; transition: border-color .15s;
+    }
+    .news-item:hover { border-color: var(--accent); }
+    .news-item a { font-size: 0.86rem; font-weight: 500; color: var(--text); text-decoration: none; display: block; margin-bottom: 0.3rem; }
+    .news-item a:hover { color: var(--accent); }
+    .news-meta { font-size: 0.7rem; color: var(--muted); }
+    .news-snippet { font-size: 0.76rem; color: var(--muted); margin-top: 0.3rem; line-height: 1.5; }
+
+    /* ── Helpers ── */
+    .c-green  { color: var(--green); }
+    .c-red    { color: var(--red); }
+    .c-yellow { color: var(--yellow); }
+    .c-accent { color: var(--accent); }
+    .c-purple { color: var(--purple); }
+    .c-orange { color: var(--orange); }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>IDX <span>Stock Analyzer</span></h1>
+  <p>Analisis investasi saham Indonesia · Harga historis + Berita terkini · Powered by <strong>Ollama qwen3:4b</strong></p>
+</header>
+
+<!-- Search -->
+<div class="search-wrap">
+  <input id="stockInput" type="text" maxlength="6"
+    placeholder="Ketik kode saham, misal: BBCA" autocomplete="off" spellcheck="false" />
+  <button id="analyzeBtn" onclick="doAnalyze()">Analisa ↗</button>
+</div>
+
+<!-- Quick picks -->
+<div class="quick-picks">
+  <span>Coba:</span>
+  <span class="chip" onclick="pick('BBCA')">BBCA</span>
+  <span class="chip" onclick="pick('BBRI')">BBRI</span>
+  <span class="chip" onclick="pick('TLKM')">TLKM</span>
+  <span class="chip" onclick="pick('GOTO')">GOTO</span>
+  <span class="chip" onclick="pick('ASII')">ASII</span>
+  <span class="chip" onclick="pick('BUMI')">BUMI</span>
+  <span class="chip" onclick="pick('ANTM')">ANTM</span>
+  <span class="chip" onclick="pick('AMMN')">AMMN</span>
+</div>
+
+<!-- Loading -->
+<div id="loading">
+  <div class="spinner"></div>
+  <div id="loadingMsg">Mengambil data...</div>
+  <div id="loadingStep"></div>
+</div>
+
+<!-- Error -->
+<div id="error"></div>
+
+<!-- Results -->
+<div id="results"></div>
+
+<script>
+const input = document.getElementById('stockInput');
+const btn   = document.getElementById('analyzeBtn');
+input.addEventListener('keydown', e => { if (e.key === 'Enter') doAnalyze(); });
+
+function pick(code) { input.value = code; doAnalyze(); }
+
+let loadingTimer = null;
+function setLoading() {
+  document.getElementById('loading').style.display = 'block';
+  document.getElementById('error').style.display   = 'none';
+  document.getElementById('results').style.display = 'none';
+  btn.disabled = true;
+  const steps = [
+    [0,    'Mengambil harga saham dari Yahoo Finance...'],
+    [2000, 'Mengambil berita terbaru dari Google News & CNBC...'],
+    [6000, 'AI (qwen3:4b) menganalisis data... \u23f3 sekitar 30\u201360 detik'],
+  ];
+  steps.forEach(([ms, msg]) => {
+    setTimeout(() => {
+      if (btn.disabled) document.getElementById('loadingMsg').textContent = msg;
+    }, ms);
+  });
+}
+function clearLoading() {
+  document.getElementById('loading').style.display = 'none';
+  btn.disabled = false;
+}
+function showError(msg) {
+  const el = document.getElementById('error');
+  el.textContent = '⚠ ' + msg;
+  el.style.display = 'block';
+}
+
+async function doAnalyze() {
+  const code = input.value.trim().toUpperCase();
+  if (!code) return;
+  setLoading();
+  try {
+    const res  = await fetch('/api/analyze', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ stock_code: code }),
+    });
+    const data = await res.json();
+    clearLoading();
+    if (!res.ok) { showError(data.detail || 'Terjadi kesalahan.'); return; }
+    renderResults(data);
+  } catch (err) {
+    clearLoading();
+    showError('Tidak dapat menghubungi server. Pastikan backend berjalan di port 8000.');
+  }
+}
+
+/* ─── Helpers ─────────────────────────────────────────── */
+function pct(v)  { return Math.round((v || 0) * 100); }
+function conf(v) { return Math.round((v || 0) * 100); }
+function fmtRupiah(v) {
+  if (!v) return 'N/A';
+  return 'Rp ' + parseInt(v).toLocaleString('id-ID');
+}
+function fmtPct(v) {
+  if (v === null || v === undefined) return 'N/A';
+  const sign = v > 0 ? '+' : '';
+  const cls  = v > 0 ? 'c-green' : v < 0 ? 'c-red' : 'c-muted';
+  return `<span class="${cls}">${sign}${v.toFixed(2)}%</span>`;
+}
+function outlookIcon(o) {
+  return { BULLISH: '📈', BEARISH: '📉', SIDEWAYS: '➡️' }[o] || '➡️';
+}
+function outlookColor(o) {
+  return { BULLISH: 'c-green', BEARISH: 'c-red', SIDEWAYS: 'c-yellow' }[o] || 'c-yellow';
+}
+function sentimentColor(s) {
+  return { POSITIF: 'c-green', NEGATIF: 'c-red', NETRAL: 'c-yellow' }[s] || 'c-yellow';
+}
+function trendColor(d) {
+  return { NAIK: 'c-green', TURUN: 'c-red', SIDEWAYS: 'c-yellow' }[d] || 'c-yellow';
+}
+function directionIcon(d) {
+  return { NAIK: '↑', TURUN: '↓', SIDEWAYS: '→' }[d] || '→';
+}
+
+/* timing signal config */
+const TIMING_CONFIG = {
+  GOOD_TIME_TO_BUY: { color: '#34d399', bg: 'rgba(52,211,153,.12)', border: '#34d399', label: '✓ Saat Tepat untuk Beli' },
+  ACCUMULATE:       { color: '#4f9eff', bg: 'rgba(79,158,255,.12)', border: '#4f9eff', label: '⊕ Akumulasi Bertahap' },
+  WAIT_FOR_DIP:     { color: '#fbbf24', bg: 'rgba(251,191,36,.12)', border: '#fbbf24', label: '⏳ Tunggu Koreksi' },
+  TAKE_PROFIT:      { color: '#fb923c', bg: 'rgba(251,146,60,.12)', border: '#fb923c', label: '↑ Pertimbangkan Ambil Untung' },
+  AVOID:            { color: '#f87171', bg: 'rgba(248,113,113,.12)', border: '#f87171', label: '✕ Hindari Saat Ini' },
+};
+
+function scoreColor(score) {
+  if (score >= 75) return '#34d399';
+  if (score >= 55) return '#4f9eff';
+  if (score >= 40) return '#fbbf24';
+  return '#f87171';
+}
+
+/* ─── Main render ──────────────────────────────────────── */
+function renderResults(data) {
+  const { stock_code, company_name, article_count, articles, price_data, analysis } = data;
+  const s   = analysis.sentiment     || {};
+  const st  = analysis.short_term    || {};
+  const lt  = analysis.long_term     || {};
+  const pt  = analysis.price_trend   || {};
+  const it  = analysis.investment_timing || {};
+  const rec = analysis.recommendation || 'TAHAN';
+  const factors = analysis.key_factors || [];
+  const risks   = analysis.risks       || [];
+  const noNews  = analysis.no_news;
+  const now = new Date().toLocaleString('id-ID');
+  const tc  = TIMING_CONFIG[it.signal] || TIMING_CONFIG['WAIT_FOR_DIP'];
+  const score   = Math.min(100, Math.max(0, parseInt(it.score) || 50));
+  const scoreDeg = Math.round(score / 100 * 360);
+  const sColor  = scoreColor(score);
+
+  let html = '';
+
+  /* Stock header */
+  html += `
+  <div class="stock-header">
+    <div>
+      <div class="code">${stock_code}</div>
+      <div class="name">${company_name || stock_code}</div>
+    </div>
+    <div class="meta">
+      ${article_count} artikel berita<br>
+      ${price_data?.available ? `Data harga: ${price_data.last_date}` : 'Harga: tidak tersedia'}<br>
+      Dianalisis: ${now}
+    </div>
+  </div>`;
+
+  /* No-news warning */
+  if (noNews) {
+    html += `<div class="no-news-badge">⚠ Tidak ada berita terkini. Analisis berdasarkan harga historis &amp; pengetahuan AI.</div>`;
+  }
+
+  /* Price Strip */
+  if (price_data?.available) {
+    html += `<div class="price-strip">
+      <div class="price-cell current">
+        <div class="pc-label">Harga Sekarang</div>
+        <div class="pc-value">${fmtRupiah(price_data.current_price)}</div>
+        <div class="pc-sub">per ${price_data.last_date}</div>
+      </div>
+      <div class="price-cell">
+        <div class="pc-label">1 Bulan Lalu</div>
+        <div class="pc-value" style="font-size:1rem">${fmtRupiah(price_data.price_1m_ago)}</div>
+        <div class="pc-change">${fmtPct(price_data.change_1m_pct)}</div>
+      </div>
+      <div class="price-cell">
+        <div class="pc-label">6 Bulan Lalu</div>
+        <div class="pc-value" style="font-size:1rem">${fmtRupiah(price_data.price_6m_ago)}</div>
+        <div class="pc-change">${fmtPct(price_data.change_6m_pct)}</div>
+      </div>
+      <div class="price-cell">
+        <div class="pc-label">1 Tahun Lalu</div>
+        <div class="pc-value" style="font-size:1rem">${fmtRupiah(price_data.price_1y_ago)}</div>
+        <div class="pc-change">${fmtPct(price_data.change_1y_pct)}</div>
+      </div>
+    </div>`;
+  }
+
+  /* Investment Timing Hero */
+  html += `
+  <div class="timing-card">
+    <div class="timing-score-wrap">
+      <div class="timing-score-ring" style="--score-color:${sColor};--score-deg:${scoreDeg}deg">
+        <div class="timing-score-inner">
+          <div class="timing-score-num" style="color:${sColor}">${score}</div>
+          <div class="timing-score-max">/100</div>
+        </div>
+      </div>
+    </div>
+    <div class="timing-body">
+      <div class="timing-title">⏱ Investment Timing Score</div>
+      <div class="timing-label-badge" style="background:${tc.bg};color:${tc.color};border:1px solid ${tc.border}">
+        ${tc.label}
+      </div>
+      <div class="timing-reasoning">${it.reasoning || 'Analisis berdasarkan kombinasi tren harga, sentimen berita, dan faktor fundamental.'}</div>
+    </div>
+  </div>`;
+
+  /* Row: Sentiment + Price Trend */
+  html += `<div class="grid-2">`;
+
+  /* Sentiment */
+  const posCount = s.positive_count || 0;
+  const negCount = s.negative_count || 0;
+  const neuCount = s.neutral_count  || 0;
+  const totalCount = posCount + negCount + neuCount;
+  const countNote = totalCount > 0
+    ? `${posCount} positif · ${negCount} negatif · ${neuCount} netral dari ${article_count} artikel`
+    : `${article_count} artikel dianalisis`;
+
+  html += `
+  <div class="card">
+    <div class="card-label">📊 Sentimen Berita</div>
+    <div class="sentiment-overall ${sentimentColor(s.overall)}">${s.overall || 'NETRAL'}</div>
+    <div class="bar-row">
+      <div class="bar-label"><span>Positif</span><span>${pct(s.positive_rate)}%</span></div>
+      <div class="bar-track"><div class="bar-fill pos" style="width:${pct(s.positive_rate)}%"></div></div>
+    </div>
+    <div class="bar-row">
+      <div class="bar-label"><span>Negatif</span><span>${pct(s.negative_rate)}%</span></div>
+      <div class="bar-track"><div class="bar-fill neg" style="width:${pct(s.negative_rate)}%"></div></div>
+    </div>
+    <div class="bar-row">
+      <div class="bar-label"><span>Netral</span><span>${pct(s.neutral_rate)}%</span></div>
+      <div class="bar-track"><div class="bar-fill neu" style="width:${pct(s.neutral_rate)}%"></div></div>
+    </div>
+    <div class="article-count-note">${countNote}</div>
+  </div>`;
+
+  /* Price Trend */
+  const dirIcon  = directionIcon(pt.direction);
+  const dirColor = trendColor(pt.direction);
+  const momColor = pt.momentum === 'KUAT' ? 'c-green' : pt.momentum === 'LEMAH' ? 'c-red' : 'c-yellow';
+  html += `
+  <div class="card">
+    <div class="card-label">📉 Tren Harga</div>
+    <div class="trend-direction ${dirColor}">${dirIcon} ${pt.direction || 'N/A'}</div>
+    <div class="trend-momentum">Momentum: <span class="${momColor}">${pt.momentum || 'N/A'}</span></div>
+    <div class="trend-assessment">${pt.assessment || 'Tidak ada data tren harga.'}</div>
+  </div>`;
+
+  html += `</div>`;
+
+  /* Row: Short Term + Long Term */
+  html += `<div class="grid-2">`;
+
+  for (const [term, td] of [['Jangka Pendek', st], ['Jangka Panjang', lt]]) {
+    const sigColor = td.signal === 'BELI' ? 'c-green' : td.signal === 'JUAL' ? 'c-red' : 'c-yellow';
+    html += `
+    <div class="card">
+      <div class="card-label">📅 ${term} · ${td.timeframe || ''}</div>
+      <div class="outlook-icon">${outlookIcon(td.outlook)}</div>
+      <div class="outlook-label ${outlookColor(td.outlook)}">${td.outlook || 'SIDEWAYS'}</div>
+      <div style="margin-bottom:.3rem;font-size:.8rem;">
+        Sinyal: <span class="${sigColor}" style="font-weight:700">${td.signal || 'TAHAN'}</span>
+      </div>
+      <div class="outlook-reasoning">${td.reasoning || ''}</div>
+      ${td.entry_note ? `<div class="outlook-entry-note">💡 ${td.entry_note}</div>` : ''}
+      <div class="conf-label">Keyakinan AI: ${conf(td.confidence)}%</div>
+      <div class="conf-track"><div class="conf-fill" style="width:${conf(td.confidence)}%"></div></div>
+    </div>`;
+  }
+  html += `</div>`;
+
+  /* Row: Recommendation + Key Factors + Risks */
+  html += `<div class="grid-2" style="margin-bottom:1rem">`;
+
+  /* Rec */
+  html += `
+  <div class="card">
+    <div class="card-label">🎯 Rekomendasi AI</div>
+    <div class="rec-badge rec-${rec}">${rec}</div>
+    <div class="rec-summary">${analysis.summary || ''}</div>
+  </div>`;
+
+  /* Key factors */
+  html += `
+  <div class="card">
+    <div class="card-label">✅ Faktor Kunci</div>
+    <ul class="factor-list">
+      ${factors.length ? factors.map(f => `<li>${f}</li>`).join('') : '<li>Tidak ada data</li>'}
+    </ul>
+  </div>`;
+
+  html += `</div>`;
+
+  /* Risks — full width */
+  html += `
+  <div class="card" style="margin-bottom:1rem">
+    <div class="card-label">⚠ Risiko Utama</div>
+    <ul class="factor-list risk-list" style="display:grid;grid-template-columns:1fr 1fr;gap:0 1rem">
+      ${risks.length ? risks.map(r => `<li>${r}</li>`).join('') : '<li>Tidak ada data</li>'}
+    </ul>
+  </div>`;
+
+  /* News */
+  if (articles && articles.length > 0) {
+    html += `<div class="section-title">📰 Berita yang Dianalisis (${articles.length})</div>`;
+    html += `<div class="news-list">`;
+    for (const art of articles) {
+      html += `
+      <div class="news-item">
+        <a href="${art.url}" target="_blank" rel="noopener">${art.title}</a>
+        <div class="news-meta">${art.source} · ${art.published}</div>
+        ${art.summary ? `<div class="news-snippet">${art.summary.substring(0, 200)}${art.summary.length > 200 ? '...' : ''}</div>` : ''}
+      </div>`;
+    }
+    html += `</div>`;
+  } else {
+    html += `<div class="section-title">📰 Berita</div>
+    <div class="card" style="text-align:center;color:var(--muted);padding:2rem">
+      Tidak ada artikel berita yang ditemukan untuk ${stock_code}
+    </div>`;
+  }
+
+  html += `<div style="height:3rem"></div>`;
+
+  const el = document.getElementById('results');
+  el.innerHTML = html;
+  el.style.display = 'block';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+</script>
+</body>
+</html>
