@@ -1,0 +1,4 @@
+{
+  "source_directories": ["."],
+  "python_version": "3.11"
+}

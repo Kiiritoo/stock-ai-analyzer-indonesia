@@ -79,5 +79,5 @@ def _fetch_price_sync(stock_code: str) -> dict:
 
 async def fetch_price_data(stock_code: str) -> dict:
     """Async wrapper untuk fetching harga (non-blocking)."""
-    loop = asyncio.get_event_loop()
+    loop = asyncio.get_running_loop()
     return await loop.run_in_executor(_executor, _fetch_price_sync, stock_code)

@@ -6,7 +6,7 @@ import uvicorn
 import asyncio
 import os
 
-from news_fetcher import fetch_articles, get_company_keywords, STOCK_COMPANY_MAP
+from news_fetcher import fetch_articles, STOCK_COMPANY_MAP
 from analyzer import analyze_with_ollama
 from price_fetcher import fetch_price_data
 

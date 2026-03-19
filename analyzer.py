@@ -380,15 +380,18 @@ def _normalize_analysis(data: dict, stock_code: str, company_label: str) -> dict
     data["risks"] = [str(r) for r in rk] if isinstance(rk, list) else []
 
     # key_events — corporate actions / major events identified by AI
+    # Filter out unfilled [ISI:...] placeholders
     ke = data.get("key_events", [])
-    data["key_events"] = [str(e) for e in ke if e and not str(e).startswith("[ISI")] if isinstance(ke, list) else []
+    data["key_events"] = (
+        [str(e) for e in ke if e and not str(e).startswith("[ISI")]
+        if isinstance(ke, list) else []
+    )
 
     # recommendation & summary
     data["recommendation"] = str(data.get("recommendation", "TAHAN"))
     data["summary"]        = str(data.get("summary", "Analisis tidak tersedia."))
 
     return data
-
 
 
 def _fallback_analysis(stock_code: str, company_label: str, raw: str) -> dict:
@@ -419,8 +422,10 @@ def _fallback_analysis(stock_code: str, company_label: str, raw: str) -> dict:
             "Terkadang model perlu percobaan kedua",
         ],
         "risks": ["Hasil AI tidak dapat diparsing — coba ulang"],
+        "key_events": [],
         "recommendation": "TAHAN",
         "summary": f"Analisis {stock_code} gagal diproses. Silakan klik Analisa lagi.",
         "_parse_error": True,
         "_raw_preview": raw[:300],
     }
+
