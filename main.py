@@ -37,25 +37,26 @@ async def analyze_stock(req: AnalyzeRequest):
 
     # Fetch berita + harga secara parallel (lebih cepat)
     try:
-        articles_task    = fetch_articles(code, max_articles=12)
-        price_task       = fetch_price_data(code)
-        articles, price  = await asyncio.gather(articles_task, price_task)
+        articles_task        = fetch_articles(code, max_display=40, max_ai=15)
+        price_task           = fetch_price_data(code)
+        (display_articles, ai_articles), price = await asyncio.gather(articles_task, price_task)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Gagal mengambil data: {str(e)}")
 
-    # Analisis AI dengan konteks harga + berita
+    # Analisis AI: hanya kirim top-relevant articles supaya prompt tidak membengkak
     try:
-        analysis = await analyze_with_ollama(code, company_names, articles, price)
+        analysis = await analyze_with_ollama(code, company_names, ai_articles, price)
     except RuntimeError as e:
         raise HTTPException(status_code=503, detail=str(e))
 
     return {
-        "stock_code":   code,
-        "company_name": company_label,
-        "article_count": len(articles),
-        "articles":     articles,
-        "price_data":   price,
-        "analysis":     analysis,
+        "stock_code":       code,
+        "company_name":     company_label,
+        "article_count":    len(display_articles),   # total ditampilkan di UI
+        "ai_article_count": len(ai_articles),         # yang dikirim ke AI
+        "articles":         display_articles,          # semua artikel untuk UI
+        "price_data":       price,
+        "analysis":         analysis,
     }
 
 

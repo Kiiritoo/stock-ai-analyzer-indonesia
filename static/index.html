@@ -204,6 +204,23 @@
     .factor-list li::before { content: "•"; color: var(--accent); flex-shrink: 0; }
     .risk-list li::before { color: var(--red); }
 
+    /* ── Key Events ── */
+    .key-events-list { display: flex; flex-direction: column; gap: 0.4rem; }
+    .key-event-item {
+      display: flex; align-items: flex-start; gap: 0.6rem;
+      padding: 0.45rem 0.6rem; border-radius: 8px;
+      background: rgba(251,146,60,.06); border: 1px solid rgba(251,146,60,.2);
+      font-size: 0.8rem; color: var(--text); line-height: 1.5;
+    }
+    .key-event-item::before { content: "⚡"; flex-shrink: 0; }
+
+    /* ── Category badge ── */
+    .cat-badge {
+      display: inline-block; padding: 1px 7px; border-radius: 4px;
+      font-size: 0.62rem; font-weight: 700; text-transform: uppercase; letter-spacing: .4px;
+      border: 1px solid currentColor; opacity: 0.9;
+    }
+
     /* ── Section title ── */
     .section-title {
       font-size: 0.72rem; font-weight: 700; text-transform: uppercase;
@@ -223,11 +240,24 @@
       background: var(--surface); border: 1px solid var(--border);
       border-radius: 10px; padding: 0.9rem 1.1rem; transition: border-color .15s;
     }
+    .news-item.ai-analyzed { border-left: 2px solid var(--accent); }
     .news-item:hover { border-color: var(--accent); }
     .news-item a { font-size: 0.86rem; font-weight: 500; color: var(--text); text-decoration: none; display: block; margin-bottom: 0.3rem; }
     .news-item a:hover { color: var(--accent); }
-    .news-meta { font-size: 0.7rem; color: var(--muted); }
+    .news-meta { font-size: 0.7rem; color: var(--muted); display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
     .news-snippet { font-size: 0.76rem; color: var(--muted); margin-top: 0.3rem; line-height: 1.5; }
+    .ai-badge {
+      display: inline-block; background: rgba(79,158,255,.12); border: 1px solid rgba(79,158,255,.3);
+      color: var(--accent); font-size: 0.6rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .5px; padding: 1px 6px; border-radius: 4px;
+    }
+    .news-info-bar {
+      background: var(--surface2); border: 1px solid var(--border); border-radius: 10px;
+      padding: 0.6rem 1rem; margin-bottom: 0.75rem;
+      display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem;
+      font-size: 0.75rem; color: var(--muted);
+    }
+    .news-info-bar strong { color: var(--text); }
 
     /* ── Helpers ── */
     .c-green  { color: var(--green); }
@@ -379,7 +409,8 @@ function scoreColor(score) {
 
 /* ─── Main render ──────────────────────────────────────── */
 function renderResults(data) {
-  const { stock_code, company_name, article_count, articles, price_data, analysis } = data;
+  const { stock_code, company_name, article_count, ai_article_count, articles, price_data, analysis } = data;
+  const aiCount = ai_article_count || Math.min(15, article_count);
   const s   = analysis.sentiment     || {};
   const st  = analysis.short_term    || {};
   const lt  = analysis.long_term     || {};
@@ -405,9 +436,9 @@ function renderResults(data) {
       <div class="name">${company_name || stock_code}</div>
     </div>
     <div class="meta">
-      ${article_count} artikel berita<br>
+      ${article_count} berita dikumpulkan · <span class="c-accent">${aiCount} dianalisis AI</span><br>
       ${price_data?.available ? `Data harga: ${price_data.last_date}` : 'Harga: tidak tersedia'}<br>
-      Dianalisis: ${now}
+      Diperbarui: ${now}
     </div>
   </div>`;
 
@@ -471,8 +502,8 @@ function renderResults(data) {
   const neuCount = s.neutral_count  || 0;
   const totalCount = posCount + negCount + neuCount;
   const countNote = totalCount > 0
-    ? `${posCount} positif · ${negCount} negatif · ${neuCount} netral dari ${article_count} artikel`
-    : `${article_count} artikel dianalisis`;
+    ? `${posCount} positif · ${negCount} negatif · ${neuCount} netral (dari ${aiCount} dianalisis AI)`
+    : `${aiCount} artikel dianalisis AI dari ${article_count} berita dikumpulkan`;
 
   html += `
   <div class="card">
@@ -559,16 +590,45 @@ function renderResults(data) {
     </ul>
   </div>`;
 
+  /* Key Events — hanya tampil jika AI mendeteksi event korporasi penting */
+  const keyEvents = analysis.key_events || [];
+  if (keyEvents.length > 0) {
+    html += `
+    <div class="card" style="margin-bottom:1rem; border-color: rgba(251,146,60,.35)">
+      <div class="card-label" style="color:var(--orange)">⚡ Event Korporasi Signifikan</div>
+      <div class="key-events-list">
+        ${keyEvents.map(e => `<div class="key-event-item">${e}</div>`).join('')}
+      </div>
+    </div>`;
+  }
+
   /* News */
   if (articles && articles.length > 0) {
-    html += `<div class="section-title">📰 Berita yang Dianalisis (${articles.length})</div>`;
+
+    html += `<div class="section-title">📰 Berita (${articles.length} dikumpulkan · ${aiCount} dianalisis AI)</div>`;
+    /* Info bar */
+    html += `<div class="news-info-bar">
+      <span>🔍 Diurutkan berdasarkan <strong>relevansi tertinggi</strong> · Berita bertanda biru digunakan AI untuk analisis</span>
+      <span>${articles.length} sumber · 5 query Google News + CNBC + Detik</span>
+    </div>`;
     html += `<div class="news-list">`;
-    for (const art of articles) {
+    for (let i = 0; i < articles.length; i++) {
+      const art = articles[i];
+      const isAI = i < aiCount;
+      const catColor = art.category_color || '#6b7280';
+      const catLabel = art.category_label || 'Umum';
       html += `
-      <div class="news-item">
+      <div class="news-item ${isAI ? 'ai-analyzed' : ''}">
         <a href="${art.url}" target="_blank" rel="noopener">${art.title}</a>
-        <div class="news-meta">${art.source} · ${art.published}</div>
-        ${art.summary ? `<div class="news-snippet">${art.summary.substring(0, 200)}${art.summary.length > 200 ? '...' : ''}</div>` : ''}
+        <div class="news-meta">
+          <span class="cat-badge" style="color:${catColor}">${catLabel}</span>
+          <span>·</span>
+          <span>${art.source}</span>
+          <span>·</span>
+          <span>${art.published}</span>
+          ${isAI ? '<span class="ai-badge">✦ AI Analyzed</span>' : ''}
+        </div>
+        ${art.summary ? `<div class="news-snippet">${art.summary.substring(0, 220)}${art.summary.length > 220 ? '...' : ''}</div>` : ''}
       </div>`;
     }
     html += `</div>`;
