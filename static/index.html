@@ -259,6 +259,128 @@
     }
     .news-info-bar strong { color: var(--text); }
 
+    /* ── Macro Dashboard ── */
+    #macroDash {
+      max-width: 900px; margin: 0 auto 2rem;
+      background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
+      overflow: hidden;
+    }
+    .macro-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0.75rem 1.25rem;
+      background: var(--surface2); border-bottom: 1px solid var(--border);
+      font-size: 0.72rem; text-transform: uppercase; letter-spacing: .8px; color: var(--muted);
+    }
+    .macro-header strong { color: var(--text); font-size: 0.8rem; letter-spacing: 0; text-transform: none; }
+    .macro-refresh-btn {
+      background: transparent; border: 1px solid var(--border); color: var(--muted);
+      border-radius: 6px; padding: 3px 10px; font-size: 0.7rem; cursor: pointer;
+      transition: border-color .15s, color .15s;
+    }
+    .macro-refresh-btn:hover { border-color: var(--accent); color: var(--accent); }
+    /* IHSG Chart */
+    .ihsg-chart-wrap {
+      border-radius: 12px; overflow: hidden; margin-bottom: 0.9rem;
+      border: 1px solid var(--border); background: var(--bg);
+      position: relative;
+    }
+    .ihsg-chart-header {
+      position: absolute; top: 8px; left: 12px; z-index: 2;
+      display: flex; align-items: center; gap: 0.6rem;
+    }
+    .ihsg-chart-title { font-size: 0.72rem; font-weight: 700; color: var(--text); }
+    .ihsg-chart-badge {
+      font-size: 0.62rem; padding: 1px 7px; border-radius: 4px; font-weight: 700;
+      background: rgba(79,158,255,.12); border: 1px solid rgba(79,158,255,.3); color: var(--accent);
+    }
+    .macro-body { padding: 1rem 1.25rem; }
+    /* Key rates row */
+    .macro-rates {
+      display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.6rem;
+      margin-bottom: 0.9rem;
+    }
+    @media (max-width: 650px) { .macro-rates { grid-template-columns: repeat(3, 1fr); } }
+    .mrate {
+      background: var(--bg); border: 1px solid var(--border); border-radius: 10px;
+      padding: 0.65rem 0.7rem; text-align: center;
+    }
+    .mrate.highlight { border-color: rgba(79,158,255,.4); }
+    .mrate-label { font-size: 0.62rem; text-transform: uppercase; color: var(--muted); letter-spacing: .5px; }
+    .mrate-val { font-size: 1.05rem; font-weight: 700; margin: 2px 0; }
+    .mrate-sub { font-size: 0.65rem; color: var(--muted); }
+    /* Commodity row */
+    .macro-commodities {
+      display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.9rem;
+      padding: 0.55rem 0.8rem;
+      background: var(--bg); border-radius: 8px; border: 1px solid var(--border);
+      align-items: center;
+    }
+    .mcommodity { font-size: 0.74rem; color: var(--muted); display: flex; align-items: center; gap: 0.3rem; }
+    .mcommodity span.val { font-weight: 600; color: var(--text); }
+    .mcommodity .sep { color: var(--border); margin: 0 0.2rem; }
+    /* Sector heatmap */
+    .macro-sectors {
+      display: grid; grid-template-columns: repeat(6, 1fr); gap: 0.45rem;
+      margin-bottom: 0.85rem;
+    }
+    @media (max-width: 600px) { .macro-sectors { grid-template-columns: repeat(3, 1fr); } }
+    .msector {
+      border-radius: 8px; padding: 0.5rem 0.4rem; text-align: center;
+      border: 1px solid transparent; cursor: default;
+    }
+    .msector.pos { background: rgba(52,211,153,.07); border-color: rgba(52,211,153,.25); }
+    .msector.neg { background: rgba(248,113,113,.07); border-color: rgba(248,113,113,.25); }
+    .msector.neu { background: var(--bg); border-color: var(--border); }
+    .msector-icon { font-size: 1.1rem; }
+    .msector-name { font-size: 0.63rem; color: var(--muted); margin-top: 2px; }
+    .msector-sent { font-size: 0.6rem; font-weight: 700; margin-top: 2px; }
+    .msector.pos .msector-sent { color: var(--green); }
+    .msector.neg .msector-sent { color: var(--red); }
+    .msector.neu .msector-sent { color: var(--muted); }
+    /* Market sentiment bar */
+    .macro-sentiment {
+      display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
+      margin-bottom: 0.9rem;
+      padding: 0.7rem 0.9rem; background: var(--bg); border-radius: 8px; border: 1px solid var(--border);
+    }
+    .macro-signal { font-size: 0.9rem; font-weight: 800; }
+    .macro-signal.bullish { color: var(--green); }
+    .macro-signal.bearish { color: var(--red); }
+    .macro-signal.sideways { color: var(--yellow); }
+    .macro-signal.neutral  { color: var(--muted); }
+    .macro-sentiment-text { font-size: 0.78rem; color: var(--muted); flex: 1; line-height: 1.5; }
+    .macro-flow { font-size: 0.7rem; font-weight: 600; padding: 2px 9px; border-radius: 6px; white-space: nowrap; }
+    .macro-flow.buy { background: rgba(52,211,153,.12); color: var(--green); }
+    .macro-flow.sell { background: rgba(248,113,113,.12); color: var(--red); }
+    .macro-flow.neutral { background: rgba(122,139,160,.12); color: var(--muted); }
+    /* AI analysis area */
+    .macro-ai-wrap { border-top: 1px solid var(--border); margin-top: 0.5rem; padding-top: 0.85rem; }
+    .macro-ai-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.6rem; }
+    .macro-ai-title { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .6px; color: var(--muted); }
+    .macro-analyze-btn {
+      background: rgba(79,158,255,.1); border: 1px solid rgba(79,158,255,.3);
+      color: var(--accent); border-radius: 8px; padding: 4px 14px;
+      font-size: 0.75rem; font-weight: 600; cursor: pointer; transition: background .15s;
+    }
+    .macro-analyze-btn:hover { background: rgba(79,158,255,.2); }
+    .macro-analyze-btn:disabled { opacity: .4; cursor: not-allowed; }
+    .macro-ai-skeleton { color: var(--muted); font-size: 0.8rem; padding: 0.5rem 0; }
+    .macro-keywatch {
+      background: rgba(79,158,255,.06); border: 1px solid rgba(79,158,255,.2);
+      border-radius: 8px; padding: 0.5rem 0.8rem;
+      font-size: 0.78rem; color: var(--accent); margin-top: 0.5rem; line-height: 1.5;
+    }
+    .macro-risks-ops { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-top: 0.5rem; }
+    .macro-risks-ops > div { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 0.55rem 0.75rem; }
+    .macro-risks-ops .mro-title { font-size: 0.65rem; text-transform: uppercase; color: var(--muted); letter-spacing: .5px; margin-bottom: 0.4rem; }
+    .macro-risks-ops li { font-size: 0.73rem; color: var(--muted); margin-bottom: 0.2rem; list-style: none; padding-left: 0.75rem; position: relative; }
+    .macro-risks-ops li::before { position: absolute; left: 0; }
+    .macro-risks li::before  { content: "✗"; color: var(--red); }
+    .macro-opps li::before   { content: "✓"; color: var(--green); }
+    /* Auto-refresh indicator */
+    .macro-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); display: inline-block; animation: pulse 2s infinite; margin-right: 4px; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+
     /* ── Helpers ── */
     .c-green  { color: var(--green); }
     .c-red    { color: var(--red); }
@@ -274,6 +396,48 @@
   <h1>IDX <span>Stock Analyzer</span></h1>
   <p>Analisis investasi saham Indonesia · Harga historis + Berita terkini · Powered by <strong>Ollama qwen3:4b</strong></p>
 </header>
+
+<!-- Macro Dashboard -->
+<div id="macroDash">
+  <div class="macro-header">
+    <span><span class="macro-dot"></span> <strong>Kondisi Pasar Indonesia</strong> · Data Real-Time</span>
+    <div style="display:flex;gap:0.5rem;align-items:center">
+      <span id="macroUpdated" style="font-size:0.67rem"></span>
+      <button class="macro-refresh-btn" onclick="loadMacro(true)">↻ Refresh</button>
+    </div>
+  </div>
+  <div class="macro-body">
+    <!-- IHSG Real-time Chart (TradingView) -->
+    <div class="ihsg-chart-wrap">
+      <div class="ihsg-chart-header">
+        <span class="ihsg-chart-title">IDX Composite (IHSG)</span>
+        <span class="ihsg-chart-badge">🔴 LIVE · TradingView</span>
+      </div>
+      <!-- TradingView Mini Widget -->
+      <div class="tradingview-widget-container" style="height:220px">
+        <div id="tradingview_ihsg_chart"></div>
+      </div>
+    </div>
+    <!-- Key rates -->
+    <div class="macro-rates" id="macroRates">
+      <div class="mrate" style="display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:0.75rem">Memuat data pasar...</div>
+    </div>
+    <!-- Commodities -->
+    <div class="macro-commodities" id="macroCommodities" style="display:none"></div>
+    <!-- Market sentiment -->
+    <div class="macro-sentiment" id="macroSentiment" style="display:none"></div>
+    <!-- Sector heatmap -->
+    <div class="macro-sectors" id="macroSectors" style="display:none"></div>
+    <!-- AI Analysis -->
+    <div class="macro-ai-wrap">
+      <div class="macro-ai-header">
+        <span class="macro-ai-title">🤖 Analisis AI Makro · Rekomendasi Sektor</span>
+        <button class="macro-analyze-btn" id="macroAnalyzeBtn" onclick="loadMacroAI()">Analisis Sekarang ↗</button>
+      </div>
+      <div id="macroAIResult"><p class="macro-ai-skeleton">Klik tombol di atas untuk analisis sektor berdasarkan kondisi makro terkini.</p></div>
+    </div>
+  </div>
+</div>
 
 <!-- Search -->
 <div class="search-wrap">
@@ -307,6 +471,37 @@
 
 <!-- Results -->
 <div id="results"></div>
+
+<!-- TradingView Library -->
+<script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+<script>
+function initTVChart() {
+  if (typeof TradingView === 'undefined') { return; }
+  try {
+    new TradingView.widget({
+      "container_id":      "tradingview_ihsg_chart",
+      "width":             "100%",
+      "height":            220,
+      "symbol":            "IDX:COMPOSITE",
+      "interval":          "D",
+      "timezone":          "Asia/Jakarta",
+      "theme":             "dark",
+      "style":             "3",
+      "locale":            "id",
+      "toolbar_bg":        "#0b0f17",
+      "enable_publishing": false,
+      "hide_side_toolbar": true,
+      "hide_top_toolbar":  false,
+      "allow_symbol_change": false,
+      "save_image":        false,
+      "withdateranges":    true,
+      "range":             "1M",
+      "hide_legend":       true,
+    });
+  } catch(e) { console.warn('TV init:', e); }
+}
+setTimeout(initTVChart, 800);
+</script>
 
 <script>
 const input = document.getElementById('stockInput');
@@ -646,6 +841,185 @@ function renderResults(data) {
   el.style.display = 'block';
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
+
+// ═══════════════════════════════════════════════════════════════
+// MACRO DASHBOARD
+// ═══════════════════════════════════════════════════════════════
+let _macroData = null;
+
+function fmtNum(n, dec = 2) {
+  if (n == null) return 'N/A';
+  return Number(n).toLocaleString('id-ID', { minimumFractionDigits: dec, maximumFractionDigits: dec });
+}
+function chgClass(pct) { return pct > 0.05 ? 'c-green' : pct < -0.05 ? 'c-red' : 'c-yellow'; }
+function chgArrow(pct) { return pct > 0.05 ? '▲' : pct < -0.05 ? '▼' : '—'; }
+
+function renderMacroRates(macro) {
+  const m   = macro.market || {};
+  const bi  = macro.bi_rate || {};
+  const fed = macro.fed_rate || {};
+  const kmk = macro.kurs_pajak || {};
+  const ihsg = m.IHSG || {};
+  const usd  = m.USD_IDR || {};
+  const ihsgChg = ihsg.change_pct || 0;
+  const usdChg  = usd.change_pct  || 0;
+
+  // Helper: format source label untuk Fed Rate
+  const fedSeries  = fed.series || 'FRED';
+  const fedLabel   = fedSeries === 'DFEDTARU' ? 'FRED · Target Harian' : 'FRED · Bulanan';
+  const fedDate    = (fed.date || '').replace(/-/g, '/');
+
+  // KMK source label
+  const kmkOfficialSrc = {'Kemenkeu API': '🏛 KMK Resmi', 'Kurs Tengah BI': '🏦 Kurs BI (Basis KMK)'};
+  const kmkLabel = kmkOfficialSrc[kmk.source] || (kmk.official ? '✓ Resmi' : '≈ Proxy Pasar');
+  const kmkColor = kmk.official ? 'var(--green)' : 'var(--yellow)';
+  // BI Rate date label
+  const biDate = bi.date ? bi.date.substring(0, 16) : '';
+
+  document.getElementById('macroRates').innerHTML = `
+    <div class="mrate highlight">
+      <div class="mrate-label">IHSG</div>
+      <div class="mrate-val">${ihsg.available ? fmtNum(ihsg.price, 0) : 'N/A'}</div>
+      <div class="mrate-sub ${chgClass(ihsgChg)}">${chgArrow(ihsgChg)} ${ihsgChg > 0 ? '+' : ''}${fmtNum(ihsgChg)}%</div>
+    </div>
+    <div class="mrate">
+      <div class="mrate-label">USD/IDR</div>
+      <div class="mrate-val">${usd.available ? fmtNum(usd.price, 0) : 'N/A'}</div>
+      <div class="mrate-sub ${chgClass(-usdChg)}" title="Perubahan dari hari sebelumnya">
+        Rp ${usdChg > 0 ? '+':''}${fmtNum(usdChg)}% ${usdChg > 0.5 ? '(Rupiah LEMAH)' : usdChg < -0.5 ? '(Rupiah MENGUAT)' : ''}
+      </div>
+    </div>
+    <div class="mrate">
+      <div class="mrate-label">BI Rate</div>
+      <div class="mrate-val">${bi.rate != null ? bi.rate + '%' : 'N/A'}</div>
+      <div class="mrate-sub" title="${bi.source || ''}">${(bi.source||'').includes('Website') ? '🏦 BI.go.id' : (bi.source||'').includes('News') ? '📰 ' + biDate : '⚠ Fallback'}</div>
+    </div>
+    <div class="mrate">
+      <div class="mrate-label">Fed Rate</div>
+      <div class="mrate-val">${fed.rate != null ? fed.rate + '%' : 'N/A'}</div>
+      <div class="mrate-sub" title="${fedSeries}: Upper Target Rate (daily)">${fedDate} · ${fedLabel}</div>
+    </div>
+    <div class="mrate">
+      <div class="mrate-label">Kurs Pajak</div>
+      <div class="mrate-val">${kmk.rate ? fmtNum(kmk.rate, 0) : 'N/A'}</div>
+      <div class="mrate-sub" style="color:${kmkColor}" title="${kmk.note || kmk.source || ''}">${kmkLabel}</div>
+    </div>`;
+
+  // Commodity strip
+  const comms = [
+    ['🥇 Emas', m.Gold], ['🛢️ Minyak', m.Oil], ['⛏️ Nikel', m.Nickel], ['🪨 Bara', m.Coal]
+  ].filter(([, d]) => d && d.available);
+  if (comms.length) {
+    const el = document.getElementById('macroCommodities');
+    el.innerHTML = '<span class="mrate-label" style="white-space:nowrap;flex-shrink:0">Komoditas:</span>' +
+      comms.map(([lbl, d], i) => {
+        const c = d.change_pct || 0;
+        return `${i > 0 ? '<span class="sep">|</span>' : ''}
+        <span class="mcommodity">${lbl}
+          <span class="val">${fmtNum(d.price)} ${d.unit||''}</span>
+          <span class="${chgClass(c)}" style="font-size:.65rem">${chgArrow(c)} ${c > 0 ? '+' : ''}${fmtNum(c)}%</span>
+        </span>`;
+      }).join('');
+    el.style.display = 'flex';
+  }
+}
+
+function renderMacroAI(ai) {
+  const om  = ai.overall_market || {};
+  const sec = ai.sector_analysis || {};
+  const sig = (om.sentiment || 'SIDEWAYS').toLowerCase();
+  const flowTxt = (om.foreign_flow || '');
+  const flowClass = flowTxt.toLowerCase().includes('buy') ? 'buy'
+                  : flowTxt.toLowerCase().includes('sell') ? 'sell' : 'neutral';
+
+  document.getElementById('macroSentiment').innerHTML = `
+    <span class="macro-signal ${sig}">${om.sentiment || 'SIDEWAYS'}</span>
+    <span class="macro-sentiment-text">${om.ihsg_outlook || ''} ${om.rupiah_psychology ? '· ' + om.rupiah_psychology : ''}</span>
+    ${flowTxt ? '<span class="macro-flow ' + flowClass + '">Asing: ' + flowTxt.substring(0,60) + '</span>' : ''}`;
+  document.getElementById('macroSentiment').style.display = 'flex';
+
+  const sectors = [
+    { key: 'banks',             icon: '🏦', name: 'Perbankan' },
+    { key: 'property',          icon: '🏗️', name: 'Properti' },
+    { key: 'technology',        icon: '💻', name: 'Teknologi' },
+    { key: 'mining_commodity',  icon: '⛏️', name: 'Tambang' },
+    { key: 'consumer_importer', icon: '🛒', name: 'Importir' },
+    { key: 'automotive',        icon: '🚗', name: 'Otomotif' },
+  ];
+  const heatEl = document.getElementById('macroSectors');
+  heatEl.innerHTML = sectors.map(({ key, icon, name }) => {
+    const s = sec[key] || {};
+    const sent = (s.sentiment || 'NETRAL').toUpperCase();
+    const cls  = sent === 'POSITIF' ? 'pos' : sent === 'NEGATIF' ? 'neg' : 'neu';
+    const stocks = (s.key_stocks || []).slice(0,3).join(', ');
+    return `<div class="msector ${cls}" title="${s.reasoning||''}\n${stocks}">
+      <div class="msector-icon">${icon}</div>
+      <div class="msector-name">${name}</div>
+      <div class="msector-sent">${sent}</div>
+      ${stocks ? '<div style="font-size:.58rem;color:var(--muted);margin-top:2px">'+stocks+'</div>' : ''}
+    </div>`;
+  }).join('');
+  heatEl.style.display = 'grid';
+
+  const risks = ai.global_risks || [];
+  const opps  = ai.opportunities || [];
+  let html = '';
+  if (om.key_watch) html += `<div class="macro-keywatch">👁 <strong>Key Watch:</strong> ${om.key_watch}</div>`;
+  if (risks.length || opps.length) {
+    html += `<div class="macro-risks-ops">
+      <div><div class="mro-title">⚠ Risiko Global</div>
+        <ul class="macro-risks">${risks.map(r=>'<li>'+r+'</li>').join('')}</ul></div>
+      <div><div class="mro-title">✦ Peluang</div>
+        <ul class="macro-opps">${opps.map(o=>'<li>'+o+'</li>').join('')}</ul></div>
+    </div>`;
+  }
+  if (ai._cached_at) html += `<div style="font-size:.62rem;color:var(--muted);margin-top:.4rem">
+    Dianalisis AI: ${ai._cached_at} · Cache 30 menit</div>`;
+  document.getElementById('macroAIResult').innerHTML = html || '<p class="macro-ai-skeleton">Analisis tidak tersedia.</p>';
+}
+
+async function loadMacroAI() {
+  const btn = document.getElementById('macroAnalyzeBtn');
+  btn.disabled = true;
+  btn.textContent = 'Menganalisis... ⏳';
+  document.getElementById('macroAIResult').innerHTML =
+    '<p class="macro-ai-skeleton">AI menganalisis kondisi makro... ~30–90 detik pertama kali</p>';
+  try {
+    const r = await fetch('/api/macro-analysis', { method: 'POST', signal: AbortSignal.timeout(180000) });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const j = await r.json();
+    renderMacroAI(j.analysis || j);
+  } catch (e) {
+    document.getElementById('macroAIResult').innerHTML =
+      '<p class="macro-ai-skeleton">Gagal: ' + e.message + '. Coba lagi.</p>';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Refresh Analisis ↗';
+  }
+}
+
+let _macroAiLoaded = false;
+async function loadMacro(manual = false) {
+  try {
+    const r = await fetch('/api/macro');
+    if (!r.ok) return;
+    const macro = await r.json();
+    _macroData = macro;
+    renderMacroRates(macro);
+    document.getElementById('macroUpdated').textContent = 'Update: ' + (macro.updated_at || '');
+    // Auto-trigger AI analysis once on first page load (non-blocking)
+    if (!_macroAiLoaded && !manual) {
+      _macroAiLoaded = true;
+      loadMacroAI();
+    }
+  } catch (e) { console.warn('Macro load error:', e.message); }
+}
+
+// Auto-refresh market data every 5 min, pause when tab is hidden
+setInterval(() => { if (!document.hidden) loadMacro(); }, 300000);
+
+// Boot: load macro dashboard on page open
+loadMacro();
 </script>
 </body>
 </html>

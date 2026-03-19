@@ -50,6 +50,7 @@ def build_analysis_prompt(
     company_names: list[str],
     articles: list[dict],
     price_data: dict,
+    macro_context: str = "",
 ) -> str:
     company_label = company_names[0] if company_names else stock_code
 
@@ -102,6 +103,8 @@ ATURAN:
 - positive_rate + negative_rate + neutral_rate = 1.0 (hitung dari jumlah berita)
 - score = 0-100 bilangan bulat
 - HANYA JSON murni"""
+    if macro_context:
+        prompt += f"\n{macro_context}"
     return prompt
 
 
@@ -109,6 +112,7 @@ def build_no_news_prompt(
     stock_code: str,
     company_names: list[str],
     price_data: dict,
+    macro_context: str = "",
 ) -> str:
     company_label = company_names[0] if company_names else stock_code
 
@@ -134,6 +138,9 @@ Isi nilai JSON berikut dengan analisis NYATA (ganti [ISI:...] dengan konten asli
 {{"price_trend":{{"direction":"[ISI: NAIK atau TURUN atau SIDEWAYS]","momentum":"[ISI: KUAT atau SEDANG atau LEMAH]","assessment":"[ISI: jelaskan tren harga dan apa artinya]"}},"sentiment":{{"overall":"[ISI: POSITIF atau NEGATIF atau NETRAL]","positive_rate":0.4,"negative_rate":0.25,"neutral_rate":0.35,"positive_count":0,"negative_count":0,"neutral_count":0}},"short_term":{{"signal":"[ISI: BELI atau TAHAN atau JUAL]","outlook":"[ISI: BULLISH atau BEARISH atau SIDEWAYS]","confidence":0.0,"timeframe":"1-4 minggu","reasoning":"[ISI: tren harga + kondisi sektoral]","entry_note":"[ISI: strategi entry]"}},"long_term":{{"signal":"[ISI: BELI atau TAHAN atau JUAL]","outlook":"[ISI: BULLISH atau BEARISH atau SIDEWAYS]","confidence":0.0,"timeframe":"6-12 bulan","reasoning":"[ISI: fundamental {company_label} + potensi bisnis]","entry_note":"[ISI: target dan strategi]"}},"investment_timing":{{"signal":"[ISI: GOOD_TIME_TO_BUY atau WAIT_FOR_DIP atau ACCUMULATE atau TAKE_PROFIT atau AVOID]","label":"[ISI: label Bahasa Indonesia]","score":0,"reasoning":"[ISI: alasan timing berdasarkan tren]"}},"key_factors":["[ISI: fundamental utama {company_label}]","[ISI: keunggulan kompetitif]","[ISI: kondisi sektor]"],"risks":["[ISI: risiko bisnis utama]","[ISI: risiko makro/regulasi]"],"key_events":[],"recommendation":"[ISI: BELI atau TAHAN atau JUAL]","summary":"[ISI: ringkasan fundamental dan timing untuk {company_label}]"}}
 
 Ganti SEMUA [ISI:...] dengan konten nyata. HANYA JSON."""
+    if macro_context:
+        return base + f"\n{macro_context}"
+    return base
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -263,14 +270,15 @@ async def analyze_with_ollama(
     company_names: list[str],
     articles: list[dict],
     price_data: dict,
+    macro_context: str = "",
 ) -> dict:
     has_articles = len(articles) > 0
     company_label = company_names[0] if company_names else stock_code
 
     if has_articles:
-        prompt = build_analysis_prompt(stock_code, company_names, articles, price_data)
+        prompt = build_analysis_prompt(stock_code, company_names, articles, price_data, macro_context)
     else:
-        prompt = build_no_news_prompt(stock_code, company_names, price_data)
+        prompt = build_no_news_prompt(stock_code, company_names, price_data, macro_context)
 
     payload = {
         "model": MODEL_NAME,
