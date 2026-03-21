@@ -51,6 +51,7 @@ def build_analysis_prompt(
     articles: list[dict],
     price_data: dict,
     macro_context: str = "",
+    fundamental_context: str = "",
 ) -> str:
     company_label = company_names[0] if company_names else stock_code
 
@@ -61,14 +62,17 @@ def build_analysis_prompt(
             f"6 bulan lalu: {_fmt_price(price_data.get('price_6m_ago'))} ({_fmt_pct(price_data.get('change_6m_pct'))})\n"
             f"1 tahun lalu: {_fmt_price(price_data.get('price_1y_ago'))} ({_fmt_pct(price_data.get('change_1y_pct'))})"
         )
-        if price_data.get("pe_ratio"):
-            price_section += f"\nP/E Ratio: {price_data['pe_ratio']:.1f}x"
-        if price_data.get("div_yield"):
-            price_section += f"\nDividend Yield: {price_data['div_yield']*100:.2f}%"
     else:
         price_section = "Data harga tidak tersedia."
 
     articles_text = _format_articles_by_category(articles)
+
+    fundamental_section = ""
+    if fundamental_context:
+        fundamental_section = f"""
+--- FUNDAMENTAL KEUANGAN ---
+{fundamental_context}
+"""
 
     prompt = f"""Kamu adalah analis saham senior IDX. Analisis {stock_code} ({company_label}) menggunakan framework analis profesional.
 
@@ -82,7 +86,7 @@ FRAMEWORK PRIORITAS ANALISIS (dari yang paling menentukan nilai intrinsik):
 
 DATA HARGA:
 {price_section}
-
+{fundamental_section}
 BERITA {stock_code} ({len(articles)} artikel, diurutkan by relevansi):
 {articles_text}
 
@@ -91,15 +95,17 @@ LANGKAH ANALISIS:
 2. Periksa sinyal Smart Money — apakah asing/institusi net buy atau net sell?
 3. Konfirmasi dengan tren harga historis
 4. Hitung sentimen NYATA per kategori artikel
-5. Sintesis: apakah ada perubahan strategis besar? (e.g. diversifikasi bisnis, restructuring)
-6. Tentukan timing investasi berdasarkan gabungan semua layer
+5. Cross-validate dengan FUNDAMENTAL: apakah valuasi mendukung atau bertentangan dengan sentimen berita?
+6. Identifikasi divergensi: berita bullish tapi fundamental lemah? Atau sebaliknya?
+7. Tentukan timing investasi berdasarkan gabungan semua layer
 
 Isi nilai JSON berikut dengan analisis NYATA (ganti [ISI:...] dengan konten asli):
-{{"price_trend":{{"direction":"[ISI: NAIK atau TURUN atau SIDEWAYS]","momentum":"[ISI: KUAT atau SEDANG atau LEMAH]","assessment":"[ISI: tren harga + korelasinya dengan corporate actions]"}},"sentiment":{{"overall":"[ISI: POSITIF atau NEGATIF atau NETRAL]","positive_rate":0.0,"negative_rate":0.0,"neutral_rate":0.0,"positive_count":0,"negative_count":0,"neutral_count":0}},"short_term":{{"signal":"[ISI: BELI atau TAHAN atau JUAL]","outlook":"[ISI: BULLISH atau BEARISH atau SIDEWAYS]","confidence":0.0,"timeframe":"1-4 minggu","reasoning":"[ISI: alasan dari berita ★★★ + sinyal harga]","entry_note":"[ISI: strategi entry konkret]"}},"long_term":{{"signal":"[ISI: BELI atau TAHAN atau JUAL]","outlook":"[ISI: BULLISH atau BEARISH atau SIDEWAYS]","confidence":0.0,"timeframe":"6-12 bulan","reasoning":"[ISI: dampak corporate action + fundamental jangka panjang]","entry_note":"[ISI: target price atau strategi panjang]"}},"investment_timing":{{"signal":"[ISI: GOOD_TIME_TO_BUY atau WAIT_FOR_DIP atau ACCUMULATE atau TAKE_PROFIT atau AVOID]","label":"[ISI: label Bahasa Indonesia]","score":0,"reasoning":"[ISI: sintesis semua layer analisis]"}},"key_factors":["[ISI: corporate action/fundamental terpenting]","[ISI: faktor kedua]","[ISI: sinyal smart money atau sektor]"],"risks":["[ISI: risiko struktural atau operasional]","[ISI: risiko eksternal/makro]"],"key_events":["[ISI: event korporasi besar jika ada]","[ISI: event keuangan signifikan]"],"recommendation":"[ISI: BELI atau TAHAN atau JUAL]","summary":"[ISI: sintesis 1-2 kalimat yang menyebut corporate action & fundamental terpenting]"}}
+{{"price_trend":{{"direction":"[ISI: NAIK atau TURUN atau SIDEWAYS]","momentum":"[ISI: KUAT atau SEDANG atau LEMAH]","assessment":"[ISI: tren harga + korelasinya dengan corporate actions]"}},"sentiment":{{"overall":"[ISI: POSITIF atau NEGATIF atau NETRAL]","positive_rate":0.0,"negative_rate":0.0,"neutral_rate":0.0,"positive_count":0,"negative_count":0,"neutral_count":0}},"short_term":{{"signal":"[ISI: BELI atau TAHAN atau JUAL]","outlook":"[ISI: BULLISH atau BEARISH atau SIDEWAYS]","confidence":0.0,"timeframe":"1-4 minggu","reasoning":"[ISI: alasan dari berita ★★★ + sinyal harga]","entry_note":"[ISI: strategi entry konkret]"}},"long_term":{{"signal":"[ISI: BELI atau TAHAN atau JUAL]","outlook":"[ISI: BULLISH atau BEARISH atau SIDEWAYS]","confidence":0.0,"timeframe":"6-12 bulan","reasoning":"[ISI: dampak corporate action + fundamental jangka panjang]","entry_note":"[ISI: target price atau strategi panjang]"}},"investment_timing":{{"signal":"[ISI: GOOD_TIME_TO_BUY atau WAIT_FOR_DIP atau ACCUMULATE atau TAKE_PROFIT atau AVOID]","label":"[ISI: label Bahasa Indonesia]","score":0,"reasoning":"[ISI: sintesis semua layer analisis]"}},"fundamental":{{"valuation_verdict":"[ISI: SANGAT MURAH atau MURAH atau WAJAR atau MAHAL atau SANGAT MAHAL]","financial_health":"[ISI: SEHAT atau CUKUP atau LEMAH atau KRITIS]","growth_quality":"[ISI: KUAT atau MODERAT atau MELAMBAT atau MENURUN]","divergence_flag":"[ISI: null jika berita dan fundamental konsisten, atau deskripsi divergensi jika bertentangan]","cross_validation":"[ISI: 1-2 kalimat bagaimana fundamental mendukung atau bertentangan sentimen berita]"}},"key_factors":["[ISI: corporate action/fundamental terpenting]","[ISI: faktor kedua]","[ISI: sinyal smart money atau sektor]"],"risks":["[ISI: risiko struktural atau operasional]","[ISI: risiko eksternal/makro]"],"key_events":["[ISI: event korporasi besar jika ada]","[ISI: event keuangan signifikan]"],"recommendation":"[ISI: BELI atau TAHAN atau JUAL]","summary":"[ISI: sintesis 1-2 kalimat yang menyebut corporate action, fundamental, dan valuasi terpenting]"}}
 
 ATURAN:
 - Ganti SEMUA [ISI:...] dengan konten nyata yang mengacu pada berita spesifik
 - Prioritaskan berita ★★★ dalam reasoning & key_factors
+- Gunakan data fundamental untuk cross-validate: valuasi mahal + berita noise = TAHAN/AVOID
 - positive_rate + negative_rate + neutral_rate = 1.0 (hitung dari jumlah berita)
 - score = 0-100 bilangan bulat
 - HANYA JSON murni"""
@@ -113,6 +119,7 @@ def build_no_news_prompt(
     company_names: list[str],
     price_data: dict,
     macro_context: str = "",
+    fundamental_context: str = "",
 ) -> str:
     company_label = company_names[0] if company_names else stock_code
 
@@ -126,20 +133,27 @@ def build_no_news_prompt(
     else:
         price_section = "Data harga tidak tersedia."
 
-    return f"""Kamu adalah analis saham senior IDX. Tidak ada berita terkini untuk {stock_code} ({company_label}).
-Analisis berdasarkan tren harga historis dan pengetahuan fundamental perusahaan.
+    fundamental_section = ""
+    if fundamental_context:
+        fundamental_section = f"""
+--- FUNDAMENTAL KEUANGAN ---
+{fundamental_context}
+"""
+
+    base = f"""Kamu adalah analis saham senior IDX. Tidak ada berita terkini untuk {stock_code} ({company_label}).
+Analisis berdasarkan tren harga historis, data fundamental, dan pengetahuan perusahaan.
 
 DATA HARGA:
 {price_section}
-
+{fundamental_section}
 Gunakan pengetahuan kamu tentang {company_label}: sektor bisnis, kompetitor, model bisnis, posisi pasar.
 
 Isi nilai JSON berikut dengan analisis NYATA (ganti [ISI:...] dengan konten asli):
-{{"price_trend":{{"direction":"[ISI: NAIK atau TURUN atau SIDEWAYS]","momentum":"[ISI: KUAT atau SEDANG atau LEMAH]","assessment":"[ISI: jelaskan tren harga dan apa artinya]"}},"sentiment":{{"overall":"[ISI: POSITIF atau NEGATIF atau NETRAL]","positive_rate":0.4,"negative_rate":0.25,"neutral_rate":0.35,"positive_count":0,"negative_count":0,"neutral_count":0}},"short_term":{{"signal":"[ISI: BELI atau TAHAN atau JUAL]","outlook":"[ISI: BULLISH atau BEARISH atau SIDEWAYS]","confidence":0.0,"timeframe":"1-4 minggu","reasoning":"[ISI: tren harga + kondisi sektoral]","entry_note":"[ISI: strategi entry]"}},"long_term":{{"signal":"[ISI: BELI atau TAHAN atau JUAL]","outlook":"[ISI: BULLISH atau BEARISH atau SIDEWAYS]","confidence":0.0,"timeframe":"6-12 bulan","reasoning":"[ISI: fundamental {company_label} + potensi bisnis]","entry_note":"[ISI: target dan strategi]"}},"investment_timing":{{"signal":"[ISI: GOOD_TIME_TO_BUY atau WAIT_FOR_DIP atau ACCUMULATE atau TAKE_PROFIT atau AVOID]","label":"[ISI: label Bahasa Indonesia]","score":0,"reasoning":"[ISI: alasan timing berdasarkan tren]"}},"key_factors":["[ISI: fundamental utama {company_label}]","[ISI: keunggulan kompetitif]","[ISI: kondisi sektor]"],"risks":["[ISI: risiko bisnis utama]","[ISI: risiko makro/regulasi]"],"key_events":[],"recommendation":"[ISI: BELI atau TAHAN atau JUAL]","summary":"[ISI: ringkasan fundamental dan timing untuk {company_label}]"}}
+{{"price_trend":{{"direction":"[ISI: NAIK atau TURUN atau SIDEWAYS]","momentum":"[ISI: KUAT atau SEDANG atau LEMAH]","assessment":"[ISI: jelaskan tren harga dan apa artinya]"}},"sentiment":{{"overall":"[ISI: POSITIF atau NEGATIF atau NETRAL]","positive_rate":0.4,"negative_rate":0.25,"neutral_rate":0.35,"positive_count":0,"negative_count":0,"neutral_count":0}},"short_term":{{"signal":"[ISI: BELI atau TAHAN atau JUAL]","outlook":"[ISI: BULLISH atau BEARISH atau SIDEWAYS]","confidence":0.0,"timeframe":"1-4 minggu","reasoning":"[ISI: tren harga + kondisi sektoral]","entry_note":"[ISI: strategi entry]"}},"long_term":{{"signal":"[ISI: BELI atau TAHAN atau JUAL]","outlook":"[ISI: BULLISH atau BEARISH atau SIDEWAYS]","confidence":0.0,"timeframe":"6-12 bulan","reasoning":"[ISI: fundamental {company_label} + potensi bisnis]","entry_note":"[ISI: target dan strategi]"}},"investment_timing":{{"signal":"[ISI: GOOD_TIME_TO_BUY atau WAIT_FOR_DIP atau ACCUMULATE atau TAKE_PROFIT atau AVOID]","label":"[ISI: label Bahasa Indonesia]","score":0,"reasoning":"[ISI: alasan timing berdasarkan fundamental dan tren]"}},"fundamental":{{"valuation_verdict":"[ISI: SANGAT MURAH atau MURAH atau WAJAR atau MAHAL atau SANGAT MAHAL]","financial_health":"[ISI: SEHAT atau CUKUP atau LEMAH atau KRITIS]","growth_quality":"[ISI: KUAT atau MODERAT atau MELAMBAT atau MENURUN]","divergence_flag":null,"cross_validation":"[ISI: kesimpulan fundamental perusahaan ini]"}},"key_factors":["[ISI: fundamental utama {company_label}]","[ISI: keunggulan kompetitif]","[ISI: kondisi sektor]"],"risks":["[ISI: risiko bisnis utama]","[ISI: risiko makro/regulasi]"],"key_events":[],"recommendation":"[ISI: BELI atau TAHAN atau JUAL]","summary":"[ISI: ringkasan fundamental dan timing untuk {company_label}]"}}
 
 Ganti SEMUA [ISI:...] dengan konten nyata. HANYA JSON."""
     if macro_context:
-        return base + f"\n{macro_context}"
+        base += f"\n{macro_context}"
     return base
 
 
@@ -271,14 +285,21 @@ async def analyze_with_ollama(
     articles: list[dict],
     price_data: dict,
     macro_context: str = "",
+    fundamental_data: dict = None,
 ) -> dict:
     has_articles = len(articles) > 0
     company_label = company_names[0] if company_names else stock_code
 
+    # Build fundamental context string for prompt
+    fund_ctx = ""
+    if fundamental_data and fundamental_data.get("available"):
+        from fundamental_fetcher import build_fundamental_context
+        fund_ctx = build_fundamental_context(fundamental_data)
+
     if has_articles:
-        prompt = build_analysis_prompt(stock_code, company_names, articles, price_data, macro_context)
+        prompt = build_analysis_prompt(stock_code, company_names, articles, price_data, macro_context, fund_ctx)
     else:
-        prompt = build_no_news_prompt(stock_code, company_names, price_data, macro_context)
+        prompt = build_no_news_prompt(stock_code, company_names, price_data, macro_context, fund_ctx)
 
     payload = {
         "model": MODEL_NAME,
@@ -387,13 +408,28 @@ def _normalize_analysis(data: dict, stock_code: str, company_label: str) -> dict
     rk = data.get("risks", [])
     data["risks"] = [str(r) for r in rk] if isinstance(rk, list) else []
 
-    # key_events — corporate actions / major events identified by AI
-    # Filter out unfilled [ISI:...] placeholders
+    # key_events
     ke = data.get("key_events", [])
     data["key_events"] = (
         [str(e) for e in ke if e and not str(e).startswith("[ISI")]
         if isinstance(ke, list) else []
     )
+
+    # fundamental cross-validation from AI
+    fund_ai = data.get("fundamental") or {}
+    if not isinstance(fund_ai, dict):
+        fund_ai = {}
+    # Clean placeholder values
+    def _clean(v, fallback="N/A"):
+        s = str(v) if v else fallback
+        return fallback if s.startswith("[ISI") else s
+    data["fundamental"] = {
+        "valuation_verdict": _clean(fund_ai.get("valuation_verdict"), "N/A"),
+        "financial_health":  _clean(fund_ai.get("financial_health"),  "N/A"),
+        "growth_quality":    _clean(fund_ai.get("growth_quality"),    "N/A"),
+        "divergence_flag":   fund_ai.get("divergence_flag"),  # null is valid
+        "cross_validation":  _clean(fund_ai.get("cross_validation"),  ""),
+    }
 
     # recommendation & summary
     data["recommendation"] = str(data.get("recommendation", "TAHAN"))
@@ -424,6 +460,13 @@ def _fallback_analysis(stock_code: str, company_label: str, raw: str) -> dict:
         "investment_timing": {
             "signal": "WAIT_FOR_DIP", "label": "Coba Analisa Ulang",
             "score": 50, "reasoning": "Gagal memproses response AI.",
+        },
+        "fundamental": {
+            "valuation_verdict": "N/A",
+            "financial_health":  "N/A",
+            "growth_quality":    "N/A",
+            "divergence_flag":   None,
+            "cross_validation":  "",
         },
         "key_factors": [
             f"Klik tombol Analisa sekali lagi untuk {company_label}",

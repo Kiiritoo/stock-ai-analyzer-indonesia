@@ -6,11 +6,12 @@ import uvicorn
 import asyncio
 import os
 
-from news_fetcher    import fetch_articles, STOCK_COMPANY_MAP
-from analyzer        import analyze_with_ollama
-from price_fetcher   import fetch_price_data
-from macro_fetcher   import fetch_all_macro, build_macro_context
-from macro_analyzer  import analyze_macro
+from news_fetcher       import fetch_articles, STOCK_COMPANY_MAP
+from analyzer           import analyze_with_ollama
+from price_fetcher      import fetch_price_data
+from macro_fetcher      import fetch_all_macro, build_macro_context
+from macro_analyzer     import analyze_macro
+from fundamental_fetcher import fetch_fundamentals
 
 app = FastAPI(title="IDX Stock Analyzer", version="3.0.0")
 
@@ -38,22 +39,25 @@ async def analyze_stock(req: AnalyzeRequest):
     company_names = STOCK_COMPANY_MAP.get(code, [])
     company_label = company_names[0] if company_names else code
 
-    # Fetch berita, harga, dan makro secara parallel
+    # Fetch berita, harga, makro, dan fundamental secara PARALLEL
     try:
-        (display_articles, ai_articles), price, macro = await asyncio.gather(
+        (display_articles, ai_articles), price, macro, fundamental = await asyncio.gather(
             fetch_articles(code, max_display=40, max_ai=15),
             fetch_price_data(code),
-            fetch_all_macro(),               # pakai cache — sangat ringan
+            fetch_all_macro(),           # pakai cache macro — ringan
+            fetch_fundamentals(code),    # cache 24 jam — hanya lambat saat pertama kali
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Gagal mengambil data: {e}")
 
-    # Injeksi konteks makro ke analisis AI
+    # Konteks makro untuk prompt AI
     macro_ctx = build_macro_context(macro, code)
 
     try:
         analysis = await analyze_with_ollama(
-            code, company_names, ai_articles, price, macro_context=macro_ctx
+            code, company_names, ai_articles, price,
+            macro_context=macro_ctx,
+            fundamental_data=fundamental,
         )
     except RuntimeError as e:
         raise HTTPException(status_code=503, detail=str(e))
@@ -66,6 +70,7 @@ async def analyze_stock(req: AnalyzeRequest):
         "articles":         display_articles,
         "price_data":       price,
         "analysis":         analysis,
+        "fundamental":      fundamental,
         "macro_snapshot": {
             "bi_rate":   macro.get("bi_rate", {}).get("rate"),
             "fed_rate":  macro.get("fed_rate", {}).get("rate"),

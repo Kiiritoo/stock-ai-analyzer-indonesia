@@ -214,6 +214,104 @@
     }
     .key-event-item::before { content: "⚡"; flex-shrink: 0; }
 
+    /* ── Fundamental Keuangan Section ── */
+    .fundamental-section {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px; margin-bottom: 1rem; overflow: hidden;
+    }
+    .fundamental-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0.75rem 1.1rem; border-bottom: 1px solid var(--border);
+      background: var(--surface2); cursor: pointer; user-select: none;
+    }
+    .fundamental-header-left { display: flex; align-items: center; gap: 0.6rem; }
+    .fundamental-toggle { font-size: 0.75rem; color: var(--muted); transition: transform .2s; }
+    .fundamental-toggle.open { transform: rotate(180deg); }
+    .fundamental-body { padding: 1rem 1.1rem; }
+    .fundamental-sector { font-size: 0.65rem; color: var(--muted); }
+
+    /* Fundamental grid */
+    .fund-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.55rem;
+      margin-bottom: 0.85rem;
+    }
+    @media (max-width: 600px) { .fund-grid { grid-template-columns: repeat(2, 1fr); } }
+    .fund-card {
+      background: var(--bg); border-radius: 10px; padding: 0.65rem 0.75rem;
+      border: 1px solid var(--border);
+    }
+    .fund-card-label { font-size: 0.6rem; text-transform: uppercase; color: var(--muted); letter-spacing: .5px; }
+    .fund-card-val { font-size: 1.0rem; font-weight: 700; margin: 3px 0; }
+    .fund-card-sub { font-size: 0.62rem; font-weight: 600; }
+    .fund-card-sub.health-good  { color: var(--green);   }
+    .fund-card-sub.health-ok    { color: var(--yellow);  }
+    .fund-card-sub.health-bad   { color: var(--red);     }
+    .fund-card-sub.health-none  { color: var(--muted);   }
+    .fund-card.highlight { border-color: rgba(79,158,255,.35); }
+
+    /* AI Fundamental Assessment badges */
+    .fund-ai-row {
+      display: flex; gap: 0.45rem; flex-wrap: wrap; margin-bottom: 0.8rem;
+    }
+    .fund-verdict-pill {
+      font-size: 0.68rem; font-weight: 700; padding: 3px 10px; border-radius: 6px;
+      display: flex; align-items: center; gap: 4px;
+    }
+    .fvp-val-cheap  { background: rgba(52,211,153,.12); color: var(--green);  border: 1px solid var(--green); }
+    .fvp-val-fair   { background: rgba(79,158,255,.1);  color: var(--accent); border: 1px solid var(--accent); }
+    .fvp-val-mahal  { background: rgba(251,191,36,.1);  color: var(--yellow); border: 1px solid var(--yellow); }
+    .fvp-val-xmahal { background: rgba(248,113,113,.12);color: var(--red);    border: 1px solid var(--red); }
+    .fvp-health-good{ background: rgba(52,211,153,.1);  color: var(--green);  border: 1px solid rgba(52,211,153,.4); }
+    .fvp-health-bad { background: rgba(248,113,113,.1); color: var(--red);    border: 1px solid rgba(248,113,113,.4); }
+    .fvp-neutral    { background: var(--bg); color: var(--muted); border: 1px solid var(--border); }
+    .fund-cross-val {
+      font-size: 0.76rem; color: var(--muted); line-height: 1.6;
+      padding: 0.5rem 0.75rem; background: var(--bg);
+      border-left: 2px solid var(--accent); border-radius: 0 8px 8px 0; margin-bottom: 0.7rem;
+    }
+    .fund-divergence {
+      font-size: 0.74rem; padding: 0.45rem 0.75rem; border-radius: 8px;
+      background: rgba(251,191,36,.07); border: 1px solid rgba(251,191,36,.3);
+      color: var(--yellow); margin-bottom: 0.7rem;
+      display: flex; align-items: flex-start; gap: 0.5rem;
+    }
+
+    /* Quarterly sparkline */
+    .fund-quarterly { margin-bottom: 0.75rem; }
+    .fund-section-label {
+      font-size: 0.62rem; text-transform: uppercase; color: var(--muted);
+      letter-spacing: .5px; margin-bottom: 0.45rem;
+    }
+    .sparkline-wrap { display: flex; align-items: flex-end; gap: 3px; height: 40px; }
+    .sparkline-bar {
+      flex: 1; border-radius: 3px 3px 0 0; min-width: 6px;
+      position: relative; transition: opacity .2s;
+    }
+    .sparkline-bar:hover { opacity: .8; }
+    .sparkline-bar.positive { background: var(--green); }
+    .sparkline-bar.negative { background: var(--red); }
+    .sparkline-labels { display: flex; gap: 3px; margin-top: 3px; }
+    .sparkline-labels span { flex: 1; font-size: 0.55rem; color: var(--muted); text-align: center; }
+
+    /* Income table */
+    .fund-table-wrap { overflow-x: auto; margin-bottom: 0.65rem; }
+    .fund-table {
+      width: 100%; border-collapse: collapse; font-size: 0.72rem;
+      min-width: 380px;
+    }
+    .fund-table th {
+      text-align: right; padding: 4px 8px; border-bottom: 1px solid var(--border);
+      color: var(--muted); font-weight: 600; font-size: 0.65rem;
+    }
+    .fund-table th:first-child { text-align: left; }
+    .fund-table td {
+      text-align: right; padding: 4px 8px; border-bottom: 1px solid rgba(37,45,61,.5);
+      color: var(--text);
+    }
+    .fund-table td:first-child { text-align: left; color: var(--muted); font-size: 0.67rem; }
+    .fund-table tr:last-child td { border-bottom: none; }
+    .fund-table tr:hover td { background: rgba(79,158,255,.04); }
+
     /* ── Category badge ── */
     .cat-badge {
       display: inline-block; padding: 1px 7px; border-radius: 4px;
@@ -603,8 +701,220 @@ function scoreColor(score) {
 }
 
 /* ─── Main render ──────────────────────────────────────── */
+/* ─── Fundamental helpers ───────────────────────────────── */
+function fmtRp(val) {
+  if (val == null) return 'N/A';
+  const abs = Math.abs(val);
+  if (abs >= 1e12) return `Rp ${(val/1e12).toFixed(1)}T`;
+  if (abs >= 1e9)  return `Rp ${(val/1e9).toFixed(1)}B`;
+  if (abs >= 1e6)  return `Rp ${(val/1e6).toFixed(1)}M`;
+  return `Rp ${val.toLocaleString('id-ID')}`;
+}
+function fmtUsd(val) {
+  if (val == null) return 'N/A';
+  const abs = Math.abs(val);
+  if (abs >= 1e9)  return `$${(val/1e9).toFixed(2)}B`;
+  if (abs >= 1e6)  return `$${(val/1e6).toFixed(2)}M`;
+  return `$${val.toLocaleString('id-ID')}`;
+}
+function healthClass(verdict) {
+  if (!verdict) return 'health-none';
+  const v = verdict.toUpperCase();
+  if (v === 'SEHAT' || v === 'KUAT' || v.includes('MURAH') || v === 'POSITIF') return 'health-good';
+  if (v === 'CUKUP' || v === 'MODERAT' || v === 'WAJAR') return 'health-ok';
+  if (v === 'LEMAH' || v === 'KRITIS' || v === 'MENURUN' || v.includes('MAHAL') || v === 'NEGATIF') return 'health-bad';
+  return 'health-none';
+}
+function verdictPillClass(type, val) {
+  if (!val || val === 'N/A') return 'fvp-neutral';
+  const v = val.toUpperCase();
+  if (type === 'val') {
+    if (v.includes('SANGAT MURAH')) return 'fvp-val-cheap';
+    if (v === 'MURAH') return 'fvp-val-cheap';
+    if (v === 'WAJAR') return 'fvp-val-fair';
+    if (v === 'MAHAL') return 'fvp-val-mahal';
+    if (v.includes('SANGAT MAHAL')) return 'fvp-val-xmahal';
+  }
+  if (type === 'health') {
+    if (v === 'SEHAT') return 'fvp-health-good';
+    if (v === 'CUKUP') return 'fvp-neutral';
+    if (v === 'LEMAH' || v === 'KRITIS') return 'fvp-health-bad';
+  }
+  if (type === 'growth') {
+    if (v === 'KUAT') return 'fvp-val-cheap';
+    if (v === 'MODERAT') return 'fvp-val-fair';
+    if (v === 'MELAMBAT') return 'fvp-val-mahal';
+    if (v === 'MENURUN') return 'fvp-val-xmahal';
+  }
+  return 'fvp-neutral';
+}
+function buildSparkline(quarterly) {
+  if (!quarterly || quarterly.length === 0) return '';
+  const vals = quarterly.map(q => q.value).filter(v => v != null);
+  if (vals.length === 0) return '';
+  const maxV = Math.max(...vals.map(Math.abs));
+  if (maxV === 0) return '';
+  const bars = quarterly.slice(-8).map(q => {
+    const pct = Math.max(10, Math.abs((q.value / maxV) * 100));
+    const cls = q.value >= 0 ? 'positive' : 'negative';
+    const label = q.period.slice(0, 7);
+    const tip = `${label}: ${fmtRp(q.value)}`;
+    return `<div class="sparkline-bar ${cls}" style="height:${pct.toFixed(0)}%" title="${tip}"></div>`;
+  }).join('');
+  const labels = quarterly.slice(-8).map(q =>
+    `<span>${q.period.slice(2, 7)}</span>`
+  ).join('');
+  return `<div class="sparkline-wrap">${bars}</div><div class="sparkline-labels">${labels}</div>`;
+}
+function buildIncomeTable(incomeStmt, cashFlow) {
+  // Rows to display from income statement + cash flow
+  const incRows  = ['Total Revenue', 'Gross Profit', 'Ebitda', 'Net Income'];
+  const cfRows   = ['Operating Cash Flow', 'Capital Expenditure', 'Free Cash Flow'];
+  const allSrc   = Object.assign({}, incomeStmt, cashFlow);
+  const rowsToShow = [...incRows, ...cfRows].filter(r => allSrc[r]);
+  if (rowsToShow.length === 0) return '';
+
+  // Get sorted date columns (most recent first, max 4)
+  const firstRow = allSrc[rowsToShow[0]];
+  const dates = Object.keys(firstRow || {}).sort().reverse().slice(0, 4);
+  if (dates.length === 0) return '';
+
+  const labelMap = {
+    'Total Revenue': 'Revenue',
+    'Gross Profit': 'Laba Kotor',
+    'Ebitda': 'EBITDA',
+    'Net Income': 'Laba Bersih',
+    'Operating Cash Flow': 'Arus Kas Operasi',
+    'Capital Expenditure': 'CapEx',
+    'Free Cash Flow': 'Free Cash Flow',
+  };
+
+  const headerCols = dates.map(d => `<th>${d.slice(0,4)}</th>`).join('');
+  const rows = rowsToShow.map(metric => {
+    const data = allSrc[metric] || {};
+    const cells = dates.map(d => {
+      const v = data[d];
+      return `<td>${v != null ? fmtRp(v) : '—'}</td>`;
+    }).join('');
+    const isSep = cfRows.includes(metric) && incRows.indexOf(metric) === -1;
+    return `<tr${isSep ? ' style="border-top:1px solid var(--border)"' : ''}><td>${labelMap[metric] || metric}</td>${cells}</tr>`;
+  }).join('');
+
+  return `<div class="fund-table-wrap">
+    <table class="fund-table">
+      <thead><tr><th>Laporan Keuangan</th>${headerCols}</tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+  </div>`;
+}
+
+function renderFundamental(fundamental, aiAnalysis) {
+  if (!fundamental || !fundamental.available) return '';
+
+  const v   = fundamental.valuation        || {};
+  const p   = fundamental.profitability    || {};
+  const g   = fundamental.growth           || {};
+  const h   = fundamental.financial_health || {};
+  const d   = fundamental.dividends        || {};
+  const q   = fundamental.quarterly_net_income || [];
+  const inc = fundamental.income_statement || {};
+  const cf  = fundamental.cash_flow        || {};
+  const bench = fundamental.sector_benchmark || {};
+  const aiF = (aiAnalysis && aiAnalysis.fundamental) || {};
+
+  function n(val, dec=2, suffix='x') {
+    return val != null ? `${Number(val).toFixed(dec)}${suffix}` : 'N/A';
+  }
+  function pct(val) { return val != null ? `${val > 0 ? '+' : ''}${Number(val).toFixed(1)}%` : 'N/A'; }
+
+  // Verdict pills from AI
+  const aiValPill = aiF.valuation_verdict && aiF.valuation_verdict !== 'N/A'
+    ? `<span class="fund-verdict-pill ${verdictPillClass('val', aiF.valuation_verdict)}">💰 ${aiF.valuation_verdict}</span>` : '';
+  const aiHealthPill = aiF.financial_health && aiF.financial_health !== 'N/A'
+    ? `<span class="fund-verdict-pill ${verdictPillClass('health', aiF.financial_health)}">🏥 ${aiF.financial_health}</span>` : '';
+  const aiGrowthPill = aiF.growth_quality && aiF.growth_quality !== 'N/A'
+    ? `<span class="fund-verdict-pill ${verdictPillClass('growth', aiF.growth_quality)}">📈 ${aiF.growth_quality}</span>` : '';
+
+  // System-computed verdict badges (from fundamental_fetcher)
+  const sysValPill = `<span class="fund-verdict-pill ${verdictPillClass('val', v.verdict)}" title="P/E vs benchmark ${bench.pe_range||'?'}">Valuasi: ${v.verdict||'N/A'}</span>`;
+  const sysHealthPill = `<span class="fund-verdict-pill ${verdictPillClass('health', h.verdict)}">Kesehatan: ${h.verdict||'N/A'}</span>`;
+  const sysGrowthPill = `<span class="fund-verdict-pill ${verdictPillClass('growth', g.verdict)}">Pertumbuhan: ${g.verdict||'N/A'}</span>`;
+
+  // Divergence alert
+  const divFlag = aiF.divergence_flag && aiF.divergence_flag !== 'null' && aiF.divergence_flag !== 'N/A'
+    ? `<div class="fund-divergence">⚠ <span>${aiF.divergence_flag}</span></div>` : '';
+
+  // Cross-validation from AI
+  const crossVal = aiF.cross_validation && aiF.cross_validation.length > 5
+    ? `<div class="fund-cross-val">🤖 AI: ${aiF.cross_validation}</div>` : '';
+
+  // Metric cards
+  const peClass = healthClass(v.verdict);
+  const cards = [
+    { label: 'P/E Ratio', val: n(v.pe_trailing, 1), sub: `Fwd: ${n(v.pe_forward, 1)} · ${bench.pe_range||'?'} wajar`, cls: peClass, highlight: true },
+    { label: 'P/B Ratio', val: n(v.pb_ratio, 2), sub: bench.pb_range ? `Wajar: ${bench.pb_range}` : '', cls: peClass },
+    { label: 'Market Cap', val: fmtRp(v.market_cap), sub: `EV: ${fmtRp(v.enterprise_value)}`, cls: 'health-none' },
+    { label: 'ROE', val: p.roe_pct != null ? `${Number(p.roe_pct).toFixed(1)}%` : 'N/A', sub: bench.roe_min ? `Target ${bench.roe_min}` : '', cls: healthClass(p.roe_pct != null ? (p.roe_pct >= 12 ? 'SEHAT' : p.roe_pct >= 8 ? 'CUKUP' : 'LEMAH') : null) },
+    { label: 'Net Margin', val: p.net_margin_pct != null ? `${Number(p.net_margin_pct).toFixed(1)}%` : 'N/A', sub: `EBITDA: ${p.ebitda_margin_pct != null ? Number(p.ebitda_margin_pct).toFixed(1)+'%' : 'N/A'}`, cls: healthClass(p.net_margin_pct >= 15 ? 'KUAT' : p.net_margin_pct >= 5 ? 'CUKUP' : 'LEMAH') },
+    { label: 'Revenue Growth', val: pct(g.revenue_yoy_pct), sub: `Laba: ${pct(g.earnings_yoy_pct)}`, cls: healthClass(g.revenue_yoy_pct > 10 ? 'KUAT' : g.revenue_yoy_pct > 0 ? 'CUKUP' : 'LEMAH') },
+    { label: 'D/E Ratio', val: n(h.de_ratio, 2, ''), sub: h.de_ratio != null ? (h.de_ratio < 1 ? '✓ Aman' : h.de_ratio < 2 ? '~ Moderat' : '⚠ Tinggi') : '', cls: healthClass(h.de_ratio != null ? (h.de_ratio < 1 ? 'SEHAT' : h.de_ratio < 2 ? 'CUKUP' : 'LEMAH') : null) },
+    { label: 'Current Ratio', val: n(h.current_ratio, 2, ''), sub: h.current_ratio ? (h.current_ratio >= 1.5 ? '✓ Likuid' : h.current_ratio >= 1 ? '~ Cukup' : '⚠ Ketat') : '', cls: healthClass(h.current_ratio >= 1.5 ? 'SEHAT' : h.current_ratio >= 1 ? 'CUKUP' : 'LEMAH') },
+    { label: 'Free Cash Flow', val: fmtRp(h.free_cash_flow), sub: h.free_cash_flow != null ? (h.free_cash_flow > 0 ? '✓ Positif' : '⚠ Negatif') : '', cls: healthClass(h.free_cash_flow > 0 ? 'SEHAT' : h.free_cash_flow != null ? 'LEMAH' : null) },
+    { label: 'Dividend Yield', val: d.yield_pct != null ? `${Number(d.yield_pct).toFixed(2)}%` : 'N/A', sub: d.payout_ratio_pct != null ? `Payout: ${Number(d.payout_ratio_pct).toFixed(0)}%` : '', cls: 'health-none' },
+  ].filter(c => c.val !== 'N/A' && c.val !== 'null');
+
+  const cardHtml = cards.map(c =>
+    `<div class="fund-card${c.highlight?' highlight':''}">
+      <div class="fund-card-label">${c.label}</div>
+      <div class="fund-card-val">${c.val}</div>
+      ${c.sub ? `<div class="fund-card-sub ${c.cls}">${c.sub}</div>` : ''}
+    </div>`
+  ).join('');
+
+  // Quarterly sparkline
+  const sparkline = buildSparkline(q);
+  const sparkHtml = sparkline
+    ? `<div class="fund-quarterly">
+        <div class="fund-section-label">Tren Laba Bersih Kuartalan</div>
+        ${sparkline}
+      </div>` : '';
+
+  // Income + CF table
+  const tableHtml = buildIncomeTable(inc, cf);
+
+  return `
+  <div class="fundamental-section" id="fundSection">
+    <div class="fundamental-header" onclick="toggleFund()">
+      <div class="fundamental-header-left">
+        <span style="font-size:.74rem;font-weight:700">📊 Fundamental Keuangan</span>
+        <span class="fundamental-sector">${fundamental.sector_label||''} · ${bench.pe_range||''} P/E wajar · Data: Yahoo Finance</span>
+      </div>
+      <span class="fundamental-toggle" id="fundToggle">▼</span>
+    </div>
+    <div class="fundamental-body" id="fundBody">
+      ${divFlag}
+      <div class="fund-ai-row">${aiValPill}${aiHealthPill}${aiGrowthPill}${!aiValPill?sysValPill:''}${!aiHealthPill?sysHealthPill:''}${!aiGrowthPill?sysGrowthPill:''}</div>
+      ${crossVal}
+      <div class="fund-grid">${cardHtml}</div>
+      ${sparkHtml}
+      ${tableHtml}
+      <div style="font-size:.6rem;color:var(--muted);margin-top:.4rem">Data fundamental dari Yahoo Finance. Bisa delayed. Bukan saran investasi.</div>
+    </div>
+  </div>`;
+}
+
+function toggleFund() {
+  const body = document.getElementById('fundBody');
+  const tog  = document.getElementById('fundToggle');
+  if (!body) return;
+  const open = body.style.display !== 'none';
+  body.style.display = open ? 'none' : 'block';
+  tog.classList.toggle('open', !open);
+}
+
+/* ─── Main render ──────────────────────────────────────── */
 function renderResults(data) {
-  const { stock_code, company_name, article_count, ai_article_count, articles, price_data, analysis } = data;
+  const { stock_code, company_name, article_count, ai_article_count, articles, price_data, analysis, fundamental } = data;
   const aiCount = ai_article_count || Math.min(15, article_count);
   const s   = analysis.sentiment     || {};
   const st  = analysis.short_term    || {};
@@ -796,6 +1106,9 @@ function renderResults(data) {
       </div>
     </div>`;
   }
+
+  /* Fundamental Keuangan — posisi B: di bawah AI analysis, di atas berita */
+  html += renderFundamental(fundamental, analysis);
 
   /* News */
   if (articles && articles.length > 0) {
