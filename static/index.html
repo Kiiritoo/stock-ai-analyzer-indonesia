@@ -766,46 +766,94 @@ function buildSparkline(quarterly) {
   ).join('');
   return `<div class="sparkline-wrap">${bars}</div><div class="sparkline-labels">${labels}</div>`;
 }
-function buildIncomeTable(incomeStmt, cashFlow) {
-  // Rows to display from income statement + cash flow
-  const incRows  = ['Total Revenue', 'Gross Profit', 'Ebitda', 'Net Income'];
-  const cfRows   = ['Operating Cash Flow', 'Capital Expenditure', 'Free Cash Flow'];
-  const allSrc   = Object.assign({}, incomeStmt, cashFlow);
-  const rowsToShow = [...incRows, ...cfRows].filter(r => allSrc[r]);
-  if (rowsToShow.length === 0) return '';
+function buildFinancialTables(fundamental) {
+  const incomeStmt      = fundamental.income_statement       || {};
+  const cashFlow        = fundamental.cash_flow              || {};
+  const ttmIncome       = fundamental.ttm_income             || {};
+  const ttmCashflow     = fundamental.ttm_cashflow           || {};
+  const qIncome         = fundamental.quarterly_income_stmt  || {};
+  const qCashflow       = fundamental.quarterly_cashflow     || {};
+  const ttmPeriod       = fundamental.ttm_period             || 'TTM';
 
-  // Get sorted date columns (most recent first, max 4)
-  const firstRow = allSrc[rowsToShow[0]];
-  const dates = Object.keys(firstRow || {}).sort().reverse().slice(0, 4);
-  if (dates.length === 0) return '';
-
+  const incRows = ['Total Revenue', 'Gross Profit', 'Ebitda', 'Net Income'];
+  const cfRows  = ['Operating Cash Flow', 'Capital Expenditure', 'Free Cash Flow'];
   const labelMap = {
-    'Total Revenue': 'Revenue',
-    'Gross Profit': 'Laba Kotor',
-    'Ebitda': 'EBITDA',
-    'Net Income': 'Laba Bersih',
-    'Operating Cash Flow': 'Arus Kas Operasi',
-    'Capital Expenditure': 'CapEx',
+    'Total Revenue': 'Revenue', 'Gross Profit': 'Laba Kotor',
+    'Ebitda': 'EBITDA', 'Net Income': 'Laba Bersih',
+    'Operating Income': 'Laba Operasi',
+    'Operating Cash Flow': 'Kas Operasi', 'Capital Expenditure': 'CapEx',
     'Free Cash Flow': 'Free Cash Flow',
   };
 
-  const headerCols = dates.map(d => `<th>${d.slice(0,4)}</th>`).join('');
-  const rows = rowsToShow.map(metric => {
-    const data = allSrc[metric] || {};
-    const cells = dates.map(d => {
-      const v = data[d];
-      return `<td>${v != null ? fmtRp(v) : '—'}</td>`;
-    }).join('');
-    const isSep = cfRows.includes(metric) && incRows.indexOf(metric) === -1;
-    return `<tr${isSep ? ' style="border-top:1px solid var(--border)"' : ''}><td>${labelMap[metric] || metric}</td>${cells}</tr>`;
-  }).join('');
+  let html = '';
 
-  return `<div class="fund-table-wrap">
-    <table class="fund-table">
-      <thead><tr><th>Laporan Keuangan</th>${headerCols}</tr></thead>
-      <tbody>${rows}</tbody>
-    </table>
-  </div>`;
+  // ── Table 1: Annual + TTM ───────────────────────────────────────────────────
+  const allAnnual = Object.assign({}, incomeStmt, cashFlow);
+  const annualRows = [...incRows, ...cfRows].filter(r => allAnnual[r] || ttmIncome[r] || ttmCashflow[r]);
+  if (annualRows.length > 0) {
+    // Get ALL annual dates sorted recent-first
+    const firstAnnualData = allAnnual[annualRows.find(r => allAnnual[r])] || {};
+    const annualDates = Object.keys(firstAnnualData).sort().reverse();  // e.g. 2024, 2023, 2022, 2021...
+    const hasTTM = Object.keys(ttmIncome).length > 0 || Object.keys(ttmCashflow).length > 0;
+
+    const annualHeaders = annualDates.map(d => `<th>${d.slice(0,4)}</th>`).join('');
+    const ttmHeader = hasTTM ? `<th style="color:var(--accent);border-left:1px solid rgba(79,158,255,.3)">${ttmPeriod}</th>` : '';
+
+    const annualRowHtml = annualRows.map(metric => {
+      const src = incRows.includes(metric) ? incomeStmt : cashFlow;
+      const ttmSrc = incRows.includes(metric) ? ttmIncome : ttmCashflow;
+      const cells = annualDates.map(d => {
+        const v = (src[metric] || {})[d];
+        return `<td>${v != null ? fmtRp(v) : '—'}</td>`;
+      }).join('');
+      const ttmVal = ttmSrc[metric];
+      const ttmCell = hasTTM
+        ? `<td style="color:var(--text);font-weight:600;border-left:1px solid rgba(79,158,255,.3)">${ttmVal != null ? fmtRp(ttmVal) : '—'}</td>`
+        : '';
+      const isSep = cfRows.includes(metric) && !incRows.includes(metric);
+      return `<tr${isSep ? ' style="border-top:1px solid var(--border)"' : ''}><td>${labelMap[metric]||metric}</td>${cells}${ttmCell}</tr>`;
+    }).join('');
+
+    html += `<div class="fund-section-label" style="margin-bottom:.4rem">📅 Tahunan${hasTTM ? ` + TTM (${ttmPeriod})` : ''}</div>
+    <div class="fund-table-wrap">
+      <table class="fund-table">
+        <thead><tr><th>Metrik</th>${annualHeaders}${ttmHeader}</tr></thead>
+        <tbody>${annualRowHtml}</tbody>
+      </table>
+    </div>`;
+  }
+
+  // ── Table 2: Quarterly (last 8 quarters → shows 2025 data) ─────────────────
+  const allQ = Object.assign({}, qIncome, qCashflow);
+  const qRows = [...incRows, ...cfRows].filter(r => allQ[r]);
+  if (qRows.length > 0) {
+    const firstQData = allQ[qRows[0]] || {};
+    // Sort quarterly dates most-recent first, show up to 8 quarters
+    const qDates = Object.keys(firstQData).sort().reverse().slice(0, 8);
+
+    if (qDates.length > 0) {
+      const qHeaders = qDates.map(d => `<th>${d.slice(0,7)}</th>`).join('');
+      const qRowHtml = qRows.map(metric => {
+        const src = incRows.includes(metric) ? qIncome : qCashflow;
+        const cells = qDates.map(d => {
+          const v = (src[metric] || {})[d];
+          return `<td>${v != null ? fmtRp(v) : '—'}</td>`;
+        }).join('');
+        const isSep = cfRows.includes(metric) && !incRows.includes(metric);
+        return `<tr${isSep ? ' style="border-top:1px solid var(--border)"' : ''}><td>${labelMap[metric]||metric}</td>${cells}</tr>`;
+      }).join('');
+
+      html += `<div class="fund-section-label" style="margin-top:.85rem;margin-bottom:.4rem">📊 Kuartalan (${qDates.length} kuartal terakhir)</div>
+      <div class="fund-table-wrap">
+        <table class="fund-table">
+          <thead><tr><th>Metrik</th>${qHeaders}</tr></thead>
+          <tbody>${qRowHtml}</tbody>
+        </table>
+      </div>`;
+    }
+  }
+
+  return html ? `<div class="fund-table-section">${html}</div>` : '';
 }
 
 function renderFundamental(fundamental, aiAnalysis) {
@@ -879,8 +927,8 @@ function renderFundamental(fundamental, aiAnalysis) {
         ${sparkline}
       </div>` : '';
 
-  // Income + CF table
-  const tableHtml = buildIncomeTable(inc, cf);
+  // Income + CF tables (Annual + TTM + Quarterly)
+  const tableHtml = buildFinancialTables(fundamental);
 
   return `
   <div class="fundamental-section" id="fundSection">

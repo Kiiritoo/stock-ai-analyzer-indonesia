@@ -56,7 +56,7 @@ def _f(val, mult=1.0) -> Optional[float]:
         return None
 
 def _df_to_compact(df, metrics: list, max_cols: int = 4) -> dict:
-    """Convert yfinance DataFrame subset to JSON-serializable dict."""
+    """Convert yfinance DataFrame subset to JSON-serializable dict (limited cols)."""
     if df is None or df.empty:
         return {}
     out = {}
@@ -74,6 +74,52 @@ def _df_to_compact(df, metrics: list, max_cols: int = 4) -> dict:
                 pass
         out[metric] = row
     return out
+
+def _df_to_compact_all(df, metrics: list) -> dict:
+    """Same as above but fetches ALL available columns (no limit) for full history."""
+    if df is None or df.empty:
+        return {}
+    out = {}
+    cols = list(df.columns)  # ALL columns
+    for metric in metrics:
+        if metric not in df.index:
+            continue
+        row = {}
+        for col in cols:
+            try:
+                val = df.loc[metric, col]
+                key = str(col.date()) if hasattr(col, 'date') else str(col)
+                if val == val:  # not NaN  # noqa
+                    row[key] = round(float(val), 0)
+            except Exception:
+                pass
+        if row:
+            out[metric] = row
+    return out
+
+def _calc_ttm(df, metrics: list) -> dict:
+    """
+    Calculate Trailing Twelve Months (TTM) by summing the last 4 quarters.
+    This gives the most up-to-date annual equivalent for 2025.
+    """
+    if df is None or df.empty:
+        return {}
+    ttm = {}
+    cols = list(df.columns)[:4]  # Last 4 quarters
+    for metric in metrics:
+        if metric not in df.index:
+            continue
+        vals = []
+        for col in cols:
+            try:
+                v = df.loc[metric, col]
+                if v == v:  # not NaN  # noqa
+                    vals.append(float(v))
+            except Exception:
+                pass
+        if len(vals) >= 2:  # Need at least 2 quarters for meaningful TTM
+            ttm[metric] = round(sum(vals), 0)
+    return ttm
 
 def _quarterly_trend(q_df) -> list:
     if q_df is None or q_df.empty or 'Net Income' not in q_df.index:
@@ -138,13 +184,13 @@ def _fetch_fundamentals_sync(ticker_symbol: str) -> dict:
         shares  = info.get('sharesOutstanding')
         floats  = info.get('floatShares')
 
-        # Profitability
+        # Profitability (from info — these are current/TTM from Yahoo)
         roe         = _f(info.get('returnOnEquity'), 100)
         net_margin  = _f(info.get('profitMargins'), 100)
         gross_m     = _f(info.get('grossMargins'), 100)
         ebitda_m    = _f(info.get('ebitdaMargins'), 100)
 
-        # Growth
+        # Growth (from info — YoY, calculated by Yahoo against prior year)
         rev_g  = _f(info.get('revenueGrowth'), 100)
         earn_g = _f(info.get('earningsGrowth'), 100)
 
@@ -157,45 +203,94 @@ def _fetch_fundamentals_sync(ticker_symbol: str) -> dict:
         div_payout  = _f(info.get('dividendPayoutRatio'), 100)
         div_rate    = _f(info.get('dividendRate'))
 
-        # Income statement (annual)
-        income_metrics = ['Total Revenue', 'Gross Profit', 'Ebitda', 'Net Income',
-                          'Operating Income', 'Operating Expense']
+        income_metrics = [
+            'Total Revenue', 'Gross Profit', 'Ebitda', 'Net Income',
+            'Operating Income', 'Operating Expense',
+        ]
+        cf_metrics = [
+            'Operating Cash Flow', 'Investing Cash Flow', 'Financing Cash Flow',
+            'Capital Expenditure', 'Free Cash Flow',
+        ]
+
+        # ── Annual Income Statement (ALL years available) ─────────────────────
+        fin_annual = None
         try:
-            fin = stock.financials
-            income_stmt = _df_to_compact(fin, income_metrics, max_cols=4)
+            fin_annual = stock.financials          # rows=metrics, cols=annual dates
+            # Try newer API attribute if old one empty
+            if fin_annual is None or fin_annual.empty:
+                fin_annual = stock.income_stmt
+            income_stmt = _df_to_compact_all(fin_annual, income_metrics)
         except Exception:
             income_stmt = {}
 
-        # Cash flow (annual)
-        cf_metrics = ['Operating Cash Flow', 'Investing Cash Flow', 'Financing Cash Flow',
-                      'Capital Expenditure', 'Free Cash Flow']
+        # ── Annual Cash Flow (ALL years available) ────────────────────────────
+        cf_annual = None
         try:
-            cf_df = stock.cashflow
-            cash_flow = _df_to_compact(cf_df, cf_metrics, max_cols=4)
+            cf_annual = stock.cashflow
+            if cf_annual is None or cf_annual.empty:
+                cf_annual = stock.cash_flow
+            cash_flow = _df_to_compact_all(cf_annual, cf_metrics)
         except Exception:
-            cf_df = None
             cash_flow = {}
 
-        # FCF latest
+        # ── Latest FCF (from most recent annual) ──────────────────────────────
         fcf = None
         try:
-            if cf_df is not None and "Free Cash Flow" in cf_df.index:
-                v = cf_df.loc["Free Cash Flow"].iloc[0]
+            if cf_annual is not None and "Free Cash Flow" in cf_annual.index:
+                v = cf_annual.loc["Free Cash Flow"].iloc[0]
                 fcf = round(float(v), 0) if v == v else None  # noqa
         except Exception:
             pass
 
-        # Quarterly trend
+        # ── Quarterly Income Statement (last 8 quarters → up to 2025) ────────
+        q_fin = None
+        quarterly_income_stmt = {}
         try:
             q_fin = stock.quarterly_financials
-            quarterly = _quarterly_trend(q_fin)
+            if q_fin is None or q_fin.empty:
+                q_fin = stock.quarterly_income_stmt
+            # Fetch all available quarters (max 8 = 2 years)
+            quarterly_income_stmt = _df_to_compact_all(q_fin, income_metrics)
         except Exception:
-            quarterly = []
+            pass
 
-        # Assessments
+        # ── Quarterly Cash Flow ───────────────────────────────────────────────
+        q_cf = None
+        quarterly_cashflow = {}
+        try:
+            q_cf = stock.quarterly_cashflow
+            if q_cf is None or q_cf.empty:
+                q_cf = stock.quarterly_cash_flow
+            quarterly_cashflow = _df_to_compact_all(q_cf, cf_metrics)
+        except Exception:
+            pass
+
+        # ── TTM Calculation (sum of last 4 quarters = most recent 12 months) ─
+        # This gives us 2025 data when annual only covers up to 2024
+        ttm_income   = _calc_ttm(q_fin, income_metrics)   if q_fin  is not None else {}
+        ttm_cashflow = _calc_ttm(q_cf,  cf_metrics)       if q_cf   is not None else {}
+
+        # TTM FCF override (more accurate than annual)
+        if 'Free Cash Flow' in ttm_cashflow and ttm_cashflow['Free Cash Flow'] is not None:
+            fcf = ttm_cashflow['Free Cash Flow']
+
+        # ── Quarterly Net Income trend (for sparkline) ────────────────────────
+        quarterly      = _quarterly_trend(q_fin) if q_fin is not None else []
+
+        # ── Assessments ───────────────────────────────────────────────────────
         val_verdict    = _assess_valuation(pe, sector)
         health_verdict = _assess_health(de, cr, fcf)
         growth_verdict = _assess_growth(rev_g, earn_g)
+
+        # Determine latest quarter period label for TTM column header
+        ttm_period = "TTM"
+        try:
+            if q_fin is not None and not q_fin.empty:
+                latest_col = list(q_fin.columns)[0]
+                ldate = latest_col.date() if hasattr(latest_col, 'date') else latest_col
+                ttm_period = f"TTM (s/d {str(ldate)[:7]})"
+        except Exception:
+            pass
 
         return {
             "available": True,
@@ -204,25 +299,25 @@ def _fetch_fundamentals_sync(ticker_symbol: str) -> dict:
             "industry":   industry,
             "sector_label": bench["label"],
             "sector_benchmark": {
-                "pe_range":  f"{bench['pe'][0]}–{bench['pe'][1]}x",
-                "pb_range":  f"{bench['pb'][0]}–{bench['pb'][1]}x",
+                "pe_range":  f"{bench['pe'][0]}\u2013{bench['pe'][1]}x",
+                "pb_range":  f"{bench['pb'][0]}\u2013{bench['pb'][1]}x",
                 "roe_min":   f">{bench['roe_min']}%",
             },
             "valuation": {
-                "market_cap":       mktcap,
-                "enterprise_value": ev,
+                "market_cap":         mktcap,
+                "enterprise_value":   ev,
                 "shares_outstanding": shares,
-                "float_shares":     floats,
-                "pe_trailing":      pe,
-                "pe_forward":       fwd_pe,
-                "pb_ratio":         pb,
-                "verdict":          val_verdict,
+                "float_shares":       floats,
+                "pe_trailing":        pe,
+                "pe_forward":         fwd_pe,
+                "pb_ratio":           pb,
+                "verdict":            val_verdict,
             },
             "profitability": {
-                "roe_pct":          roe,
-                "net_margin_pct":   net_margin,
-                "gross_margin_pct": gross_m,
-                "ebitda_margin_pct":ebitda_m,
+                "roe_pct":           roe,
+                "net_margin_pct":    net_margin,
+                "gross_margin_pct":  gross_m,
+                "ebitda_margin_pct": ebitda_m,
             },
             "growth": {
                 "revenue_yoy_pct":  rev_g,
@@ -230,18 +325,27 @@ def _fetch_fundamentals_sync(ticker_symbol: str) -> dict:
                 "verdict":          growth_verdict,
             },
             "financial_health": {
-                "de_ratio":           de,
-                "current_ratio":      cr,
-                "free_cash_flow":     fcf,
-                "verdict":            health_verdict,
+                "de_ratio":       de,
+                "current_ratio":  cr,
+                "free_cash_flow": fcf,
+                "verdict":        health_verdict,
             },
             "dividends": {
                 "yield_pct":        div_yield,
                 "payout_ratio_pct": div_payout,
                 "rate":             div_rate,
             },
+            # Annual (full history, all years available)
             "income_statement":       income_stmt,
             "cash_flow":              cash_flow,
+            # Quarterly (last 8 quarters — includes 2025 data)
+            "quarterly_income_stmt":  quarterly_income_stmt,
+            "quarterly_cashflow":     quarterly_cashflow,
+            # TTM = sum of last 4 quarters (most current 12-month snapshot)
+            "ttm_income":             ttm_income,
+            "ttm_cashflow":           ttm_cashflow,
+            "ttm_period":             ttm_period,
+            # Net Income per quarter (for sparkline chart)
             "quarterly_net_income":   quarterly,
         }
 
